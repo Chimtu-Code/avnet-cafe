@@ -4,13 +4,15 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .home-top {
   width: 100%;
   height: auto;
-  padding:0 1rem;
-  margin-top: 1.3rem;
+  padding:1rem 1.3rem 0;
+  background: linear-gradient(180deg, #61daff89 0%, 
+  #61daff89 40%,rgba(255, 255, 255, 0.5) 100%);
 }
 
 .home-top-content {
@@ -26,9 +28,9 @@
 .home-top-content p {
   color: #000;
   font-family: Fuzzy Bubbles;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-style: normal;
-  font-weight: 800;
+  font-weight: 600;
   line-height: normal;
 }
 
@@ -49,7 +51,7 @@
   gap: 0.5rem;
   border-radius: 1rem;
   background: #fff;
-  box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.25);
+  box-shadow: 0px 0px 3px 1px rgba(0, 0, 0, 0.25);
 }
 
 .search-sec input {
@@ -86,6 +88,8 @@
 
 .home-header img {
   opacity: 0.6;
+  height: 1.3rem;
+  aspect-ratio: 1/1;
 }
 
 .menu-section {
@@ -104,4 +108,49 @@
 
 .loading-state img {
   width: 100%;
+}
+
+.items-indicator {
+  position: fixed;
+  bottom: 0;
+  height: 2.75rem;
+  z-index: 1000;
+  width: min(100vw, 22.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #8DD7FC;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  padding: 0 1rem;
+  border-radius: 6px;
+}
+
+.items-indicator p {
+  color: #000000;
+  font-family: Roboto;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}
+
+.items-indicator button {
+  background: #8DD7FC;
+  border: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+a{
+  text-decoration: none;
+}
+
+@media (max-width: 480px) {
+  .items-indicator {
+    width: 100vw;
+  }
 }

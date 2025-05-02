@@ -1,7 +1,10 @@
 import React from "react";
 import "../styles/Card.css";
+import { useCart } from "../context/CartContext";
 
 const Card = ({ item }) => {
+  const { addToCart } = useCart();
+
   return (
     <div className="food-card">
       <img src="./food-img.svg" alt="" className="food-img" />
@@ -11,7 +14,9 @@ const Card = ({ item }) => {
           <img src="./veg-indicator.svg" alt="VEG" />
         </div>
         <p className="card-item-price">₹{item.price}</p>
-        <button className="card-add-btn">ADD</button>
+        <button onClick={() => addToCart(item)} className="card-add-btn">
+          ADD
+        </button>
       </div>
     </div>
   );

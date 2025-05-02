@@ -1,0 +1,124 @@
+.cart-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.64rem;
+  margin: 0.63rem 0;
+  border-radius: 1rem;
+  background: #fff;
+  height: 8.5rem;
+  gap: 0.5rem;
+  box-shadow: 1px 1px 5px 0px rgba(0, 0, 0, 0.25);
+}
+
+.cart-food-img {
+  height: 100%;
+  width: 40%;
+}
+
+.cart-name-and-price {
+  width: 60%;
+  height: 100%;
+}
+
+.cart-item-name {
+  width: 100%;
+  height: 40%;
+  display: flex;
+  justify-content: flex-start;
+  position: relative;
+  align-items: center;
+}
+
+.cart-item-name p {
+  height: auto;
+  width: 85%;
+  color: #4a4b4f;
+  font-family: Roboto;
+  font-size: 1.125rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}
+
+.cart-item-name img {
+  position: absolute;
+  right: 0;
+  top: 0;
+  margin: 2%;
+}
+
+.cart-item-price {
+  width: 100%;
+  height: 26%;
+  display: flex;
+  align-items: center;
+  color: #1e1f21;
+  font-family: Roboto;
+  font-size: 1.1rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.cart-item-quantity-and-remove {
+  width: 100%;
+  height: 34%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cart-item-quantity {
+  width: 60%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  position: relative;
+  background: #fff;
+  border-radius: 0.625rem;
+  border: 1px solid #c8c8c8;
+  cursor: pointer;
+  color: #343434;
+  font-family: Roboto;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.cart-item-quantity-btn{
+  width: 20%;
+  height: 70%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F2F2F2;
+  border:none;
+  outline:none;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.cart-item-quantity-btn:hover{
+  background: #E8E8E8;
+}
+
+.cart-item-quantity-btn img{
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.cart-item-remove-btn {
+  width: 20%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F2F2F2;
+  border-radius: 0.625rem;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}

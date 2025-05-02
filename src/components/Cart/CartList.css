@@ -1,0 +1,7 @@
+.cart-list{
+  width: 90%;
+  height: auto;
+  margin:0 auto;
+  padding: 1rem 0;
+  border-bottom: 3px dotted green;
+}

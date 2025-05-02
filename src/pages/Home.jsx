@@ -1,13 +1,16 @@
-import {useState,React,useEffect} from "react";
+import { useState, React, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import "../styles/Home.css";
 import MenuCategory from "../components/MenuCategory";
 import { supabase } from "../services/supabaseClient";
+import { Link } from "react-router-dom";
+import { useCart } from "../context/CartContext";
 
 const Home = () => {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { getTotalItems } = useCart();
 
   useEffect(() => {
     fetchMenuData();
@@ -18,30 +21,32 @@ const Home = () => {
       setLoading(true);
 
       const { data: categoryData, error: categoryError } = await supabase
-        .from('categories')
-        .select('*');
+        .from("categories")
+        .select("*");
 
       if (categoryError) throw categoryError;
 
       const { data: itemData, error: itemError } = await supabase
-        .from('items')
-        .select('*');
+        .from("items")
+        .select("*");
 
       if (itemError) throw itemError;
 
       setCategories(categoryData);
       setItems(itemData);
     } catch (error) {
-      console.error('Error fetching menu:', error.message);
+      console.error("Error fetching menu:", error.message);
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) {
-    return <div className="loading-state">
-      <img src="./cafe-logo.svg" alt="HI" />
-    </div>;
+    return (
+      <div className="loading-state">
+        <img src="./cafe-logo.svg" alt="HI" />
+      </div>
+    );
   }
   return (
     <div className="home-page">
@@ -56,17 +61,33 @@ const Home = () => {
           <input type="text" />
         </div>
         <div className="home-header">
-          <img src="./coffee.svg" alt="O" />
+          <img src="./verified-icon.svg" alt="O" />
           <hr />
           <p>Top Categories</p>
           <hr />
-          <img src="./coffee.svg" alt="O" />
+          <img src="./verified-icon.svg" alt="O" />
         </div>
       </div>
       <div className="menu-section">
-        {categories.map((category)=>(
-          <MenuCategory key={category.id} category={category} items={items.filter(item=>item.category_id===category.id)}/>
+        {categories.map((category) => (
+          <MenuCategory
+            key={category.id}
+            category={category}
+            items={items.filter((item) => item.category_id === category.id)}
+          />
         ))}
+      </div>
+      <div
+        className="items-indicator"
+        style={{ display: getTotalItems() === 0 ? "none" : "flex" }}
+      >
+        <p>{getTotalItems()} items added</p>
+        <Link to="/cart" className="cart-icon">
+          <button>
+          <p>VIEW CART</p>
+            <img src="./cart-icon.svg" alt="" />
+          </button>
+        </Link>
       </div>
     </div>
   );

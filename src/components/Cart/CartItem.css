@@ -89,8 +89,8 @@
 }
 
 .cart-item-quantity-btn{
-  width: 20%;
-  height: 70%;
+  width: 1.75rem;
+  height: 1.75rem;
   display: flex;
   align-items: center;
   justify-content: center;

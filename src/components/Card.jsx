@@ -1,9 +1,23 @@
-import React from "react";
+import React, { useState } from "react";
 import "../styles/Card.css";
 import { useCart } from "../context/CartContext";
 
 const Card = ({ item }) => {
-  const { addToCart } = useCart();
+  const { addToCart, cartItems, increment, decrement } = useCart();
+  const currentItem = cartItems.find((i) => i.id === item.id);
+  const quantity = currentItem ? currentItem.quantity : 0;
+
+  const handleAdd = () => {
+    addToCart(item);
+  };
+
+  const handleIncrement = () => {
+    increment(item.id);
+  };
+
+  const handleDecrement = () => {
+    decrement(item.id);
+  };
 
   return (
     <div className="food-card">
@@ -14,9 +28,30 @@ const Card = ({ item }) => {
           <img src="./veg-indicator.svg" alt="VEG" />
         </div>
         <p className="card-item-price">₹{item.price}</p>
-        <button onClick={() => addToCart(item)} className="card-add-btn">
-          ADD
-        </button>
+        {quantity === 0 ? (
+          <button onClick={handleAdd} className="card-add-btn">
+            ADD
+          </button>
+        ) : (
+          <div className="card-item-quantity">
+            <button
+              className="cart-item-quantity-btn"
+              onClick={handleDecrement}
+            >
+              <img
+                src="./minus-icon.svg"
+                alt="-"
+              />
+            </button>
+            <p className="cart-item-quantity-value">{quantity}</p>
+            <button
+              className="cart-item-quantity-btn"
+              onClick={handleIncrement}
+            >
+              <img src="./plus-icon.svg" alt="+" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

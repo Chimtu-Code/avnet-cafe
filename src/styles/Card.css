@@ -78,3 +78,22 @@
   border: 1px solid #c8c8c8;
   cursor: pointer;
 }
+
+.card-item-quantity{
+  width: 60%;
+  height: 34%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  position: relative;
+  background: #fff;
+  border-radius: 0.625rem;
+  border: 1px solid #c8c8c8;
+  cursor: pointer;
+  color: #343434;
+  font-family: Roboto;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}

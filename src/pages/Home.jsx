@@ -11,6 +11,7 @@ const Home = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const { getTotalItems } = useCart();
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     fetchMenuData();
@@ -77,6 +78,27 @@ const Home = () => {
           />
         ))}
       </div>
+      <div className="menu-button">
+        <button onClick={()=>alert("Production is under progress")}>MENU</button>
+      </div>
+      {/* {showMenu && (
+        <div className="food-menu">
+          <header>MENU</header>
+          <div className="menu-list">
+            <div>
+              <button>
+                <p>Category</p>
+                <p>No of items in the category</p>
+              </button>
+              <ul>
+                <li>Food Items</li>
+                <li>Food Items</li>
+                <li>Food Items</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )} */}
       <div
         className="items-indicator"
         style={{ display: getTotalItems() === 0 ? "none" : "flex" }}
@@ -84,7 +106,7 @@ const Home = () => {
         <p>{getTotalItems()} items added</p>
         <Link to="/cart" className="cart-icon">
           <button>
-          <p>VIEW CART</p>
+            <p>VIEW CART</p>
             <img src="./cart-icon.svg" alt="" />
           </button>
         </Link>

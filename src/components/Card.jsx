@@ -21,7 +21,7 @@ const Card = ({ item }) => {
 
   return (
     <div className="food-card">
-      <img src="./food-img.svg" alt="" className="food-img" />
+      <img src={item.image_url || "./food-img.svg"} alt={item.name} className="food-img" />
       <div className="name-and-price">
         <div className="card-item-name">
           <p>{item.name}</p>

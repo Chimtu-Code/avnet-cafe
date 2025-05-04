@@ -1,0 +1,153 @@
+.user-token{
+  width: 94%;
+  position: relative;
+  margin:0 auto;
+  border-radius: 0.625rem;
+  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.25);
+}
+
+.user-name{
+  color: #ffffff;
+  background-color: black;
+  font-family: Poppins;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  padding: 0.5rem 0.8rem;
+  border-top-right-radius:inherit;
+  border-top-left-radius: inherit;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-indicator{
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.user-token-details{
+  width: 100%;
+  padding: 1rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-bottom: 2px dotted green;
+}
+
+.user-token-details section{
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-token-greet{
+  color: #000;
+  font-family: Poppins;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.user-token-number{
+  color: #000;
+  font-family: sans-serif;
+  font-size: 2.5rem;
+  font-style: normal;
+  font-weight: 800;
+  line-height: normal;
+}
+
+.user-token-timings{
+  color: #000;
+  font-family: Poppins;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.user-token-timings p:nth-child(1){
+  color: #000;
+  text-align: right;
+}
+
+.user-bill-details{
+  width: 100%;
+  padding: 1rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.user-bill-details header{
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-bill-details header p{
+  color: #000;
+  font-family: Poppins;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+}
+
+.user-bill-details header button{
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.2rem;
+  color: #78787A;
+  font-family: Roboto;
+  font-size: 0.625rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  background-color: #ffffff;
+  cursor: pointer;
+}
+
+.user-ordered-items{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.user-ordered-item{
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 0.625rem;
+  background-color: #F7F7F7;
+}
+
+.user-bill-total,.user-bill-gst,.user-bill-to-pay{
+  display: flex;
+  justify-content: space-between;
+  color: #282828;
+  font-family: Roboto;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.user-bill-to-pay{
+  color: #282828;
+  font-family: Roboto;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}

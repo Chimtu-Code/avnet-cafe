@@ -2,10 +2,9 @@ import React from "react";
 import CartList from "../components/Cart/CartList";
 import "../styles/Cart.css";
 import { useCart } from "../context/CartContext";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Cart = () => {
-  const { items = [] } = useCart();
   const { getTotalItems } = useCart();
   const { getTotalPrice } = useCart();
   const totalAmount = getTotalPrice();
@@ -46,7 +45,9 @@ const Cart = () => {
         </div>
       </div>
 
-      <button className="payment-btn">CONTINUE</button>
+      <button className="payment-btn" disabled={getTotalItems() === 0} style={{backgroundColor: getTotalItems() === 0 ? "#ccc" : "#000"}}>
+        <Link to={getTotalItems()===0?"":"/check-out" } d>CONTINUE</Link>
+      </button>
     </div>
   );
 };

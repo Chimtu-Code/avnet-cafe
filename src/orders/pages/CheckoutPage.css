@@ -1,0 +1,81 @@
+.check-out{
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem;
+}
+
+.check-out form{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.check-out input{
+  width: 100%;
+  display: flex;
+  padding: 1rem;
+  align-items: center;
+  gap: 0.625rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--Background-Grey2, #CCC);
+  background: #FFF;
+  align-self: stretch;
+  font-family: Poppins;
+  font-size: 1rem;
+  font-style: normal; 
+  font-weight: 400;
+  line-height: 1.375rem; /* 137.5% */
+  letter-spacing: -0.0255rem;
+}
+
+.check-out input:focus{
+  outline: none;
+  border: 1px solid var(--Primary, #000);
+}
+
+.check-out input::placeholder{
+  color: var(--Background-Grey2, #CCC);
+  font-family: Poppins;
+  font-size: 1rem;
+  font-style: normal; 
+  font-weight: 400;
+  line-height: 1.375rem; /* 137.5% */
+  letter-spacing: -0.0255rem;
+}
+
+.check-out input{
+  margin-bottom: 1rem;
+}
+
+.check-out label{
+  color: var(--Text-Default, #282828);
+  font-family: Poppins;
+  font-size: 0.8rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 158%;
+  width: 98%;
+}
+
+.check-out button{
+  width: 100%;
+  margin-top: 1rem;
+  height: 2.8rem;
+  background: #000;
+  color: #FFF;
+  color: #FFF;
+  font-family: Roboto;
+  font-size: 1rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  outline:none;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}

@@ -5,3 +5,10 @@
   padding: 1rem 0;
   border-bottom: 3px dotted green;
 }
+
+.empty-cart{
+  height:12rem;
+  width: 100%;
+  position: relative;
+  margin: 0 auto;
+}

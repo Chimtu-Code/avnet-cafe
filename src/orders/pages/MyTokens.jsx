@@ -2,6 +2,7 @@ import { React, useState, useEffect } from "react";
 import "./MyTokens.css";
 import TokenCard from "../components/TokenCard";
 import { supabase } from "../../services/supabaseClient";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 const MyTokens = () => {
   const [orders, setOrders] = useState([]);
@@ -29,18 +30,20 @@ const MyTokens = () => {
   return (
     <div className="user-tokens">
       <div className="user-tokens-nav">
-        <p>My Tokens</p>
-        <button>
-          <img src="./menu.svg" alt="=" />
+        <button onClick={() => (window.location.href = "/")}>
+          <img src="./back-arrow.svg" alt="Back" className="back-arw" />
         </button>
+        <p>My Tokens</p>
       </div>
       <div className="user-tokens-list">
         {loading ? (
-          <p>Loading...</p>
+          <DotLottieReact src="./loader-food-animation.lottie" loop autoplay className="loader-animation"/>
         ) : orders.length > 0 ? (
           orders.map((order) => <TokenCard key={order.id} order={order} />)
         ) : (
-          <p>No orders found.</p>
+          <>
+            <img src="./no-tokens.svg" alt=":(" className="no-tokens" />
+          </>
         )}
       </div>
     </div>

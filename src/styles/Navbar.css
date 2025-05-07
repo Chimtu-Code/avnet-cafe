@@ -7,6 +7,10 @@
   position: relative;
 }
 
+.nav-bar button{
+  cursor: pointer;
+}
+
 .nav-logo-n-msg{
   display: flex;
   align-items: center;

@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import Cart from "./pages/Cart";
 import CheckoutPage from "./orders/pages/CheckoutPage";
 import MyTokens from "./orders/pages/MyTokens";
+import SideBar from "./pages/SideBar";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 const App = () => {
@@ -14,6 +15,7 @@ const App = () => {
           <Route path="/cart" element={<Cart />} />
           <Route path="/check-out" element={<CheckoutPage />}></Route>
           <Route path="/my-tokens" element={<MyTokens />}></Route>
+          <Route path="/side-bar" element={<SideBar />} ></Route>
         </Routes>
       </Router>
     </div>

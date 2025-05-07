@@ -42,6 +42,24 @@ const Home = () => {
     }
   };
 
+  const handleCategoryClick = (categoryId) => {
+    setCategories((prevCategories) => {
+      const idx = prevCategories.findIndex((cat) => cat.id === categoryId);
+      if (idx === -1) return prevCategories;
+      const newCategories = [...prevCategories];
+      const [selected] = newCategories.splice(idx, 1);
+      return [selected, ...newCategories];
+    });
+    setShowMenu(false);
+  };
+
+  const categoriesWithCounts = categories.map((category) => {
+    const itemCount = items.filter(
+      (item) => item.category_id === category.id
+    ).length;
+    return { ...category, itemCount };
+  });
+
   if (loading) {
     return (
       <div className="loading-state">
@@ -54,12 +72,12 @@ const Home = () => {
       <div className="home-top">
         <Navbar />
         <div className="home-top-content">
-          <p>What do you want to eat?</p>
+          <p>What's On Your Mind To Eat?</p>
           <img src="./chef-img.svg" alt="" />
         </div>
         <div className="search-sec">
           <img src="./search-icon.svg" alt="" />
-          <input type="text" />
+          <input type="text" placeholder='Try to search "DOSA" or anything..' />
         </div>
         <div className="home-header">
           <img src="./verified-icon.svg" alt="O" />
@@ -79,26 +97,27 @@ const Home = () => {
         ))}
       </div>
       <div className="menu-button">
-        <button onClick={()=>alert("Production is under progress")}>MENU</button>
+        <button onClick={() => setShowMenu(true)}>MENU</button>
       </div>
-      {/* {showMenu && (
+      {showMenu && (
         <div className="food-menu">
+          <button className="menu-close-btn" onClick={() => setShowMenu(false)}>
+            <img src="./down-arrow.svg" alt="x" />
+          </button>
           <header>MENU</header>
           <div className="menu-list">
-            <div>
-              <button>
-                <p>Category</p>
-                <p>No of items in the category</p>
+            {categoriesWithCounts.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => handleCategoryClick(category.id)}
+              >
+                <p>{category.name}</p>
+                <p>{category.itemCount}</p>
               </button>
-              <ul>
-                <li>Food Items</li>
-                <li>Food Items</li>
-                <li>Food Items</li>
-              </ul>
-            </div>
+            ))}
           </div>
         </div>
-      )} */}
+      )}
       <div
         className="items-indicator"
         style={{ display: getTotalItems() === 0 ? "none" : "flex" }}

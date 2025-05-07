@@ -1,58 +1,58 @@
-.check-out{
+.check-out {
   width: 100%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 0.7rem;
 }
 
-.check-out form{
+.check-out form {
   width: 100%;
   display: flex;
   align-items: center;
   flex-direction: column;
 }
 
-.check-out input{
+.check-out input {
   width: 100%;
   display: flex;
   padding: 1rem;
   align-items: center;
   gap: 0.625rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--Background-Grey2, #CCC);
-  background: #FFF;
+  border: 1px solid var(--Background-Grey2, #ccc);
+  background: #fff;
   align-self: stretch;
   font-family: Poppins;
   font-size: 1rem;
-  font-style: normal; 
+  font-style: normal;
   font-weight: 400;
   line-height: 1.375rem; /* 137.5% */
   letter-spacing: -0.0255rem;
 }
 
-.check-out input:focus{
+.check-out input:focus {
   outline: none;
   border: 1px solid var(--Primary, #000);
 }
 
-.check-out input::placeholder{
-  color: var(--Background-Grey2, #CCC);
+.check-out input::placeholder {
+  color: var(--Background-Grey2, #ccc);
   font-family: Poppins;
   font-size: 1rem;
-  font-style: normal; 
+  font-style: normal;
   font-weight: 400;
   line-height: 1.375rem; /* 137.5% */
   letter-spacing: -0.0255rem;
 }
 
-.check-out input{
+.check-out input {
   margin-bottom: 1rem;
 }
 
-.check-out label{
+.check-out label {
   color: var(--Text-Default, #282828);
   font-family: Poppins;
   font-size: 0.8rem;
@@ -62,20 +62,49 @@
   width: 98%;
 }
 
-.check-out button{
+.check-out button {
   width: 100%;
   margin-top: 1rem;
   height: 2.8rem;
   background: #000;
-  color: #FFF;
-  color: #FFF;
+  color: #fff;
+  color: #fff;
   font-family: Roboto;
   font-size: 1rem;
   font-style: normal;
   font-weight: 400;
   line-height: normal;
-  outline:none;
+  outline: none;
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
+  box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease-in-out;
+}
+
+.welcome-to-signin {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.welcome-to-signin img {
+  height: 13rem;
+  width: 13rem;
+  flex-shrink: 0;
+}
+
+.welcome-to-signin p {
+  color: #707070;
+  text-align: center;
+  font-family: Poppins;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 158%;
 }

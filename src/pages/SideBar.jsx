@@ -1,8 +1,11 @@
 import React from "react";
 import "../styles/Sidebar.css";
 import { Link } from "react-router-dom";
+import { useSideBar } from "../context/SideBarContext";
 
 const SideBar = () => {
+  const { toggleSideBar } = useSideBar();
+
   const sideBarOptions = [
     {
       text: "My Tokens",
@@ -18,15 +21,15 @@ const SideBar = () => {
       text: "Admin Login",
       icon: "./admin-icon.svg",
       link: "/admin-login",
-    }
+    },
   ];
 
-  const SideBarOption = ({ text, icon ,link }) => {
+  const SideBarOption = ({ text, icon, link }) => {
     return (
       <Link className="side-bar-option" to={link}>
         <img src={icon} alt={text} />
         <p>{text}</p>
-        <img src="./right-arrow.svg" alt=">" className="sb-r-arw"/>
+        <img src="./right-arrow.svg" alt=">" className="sb-r-arw" />
       </Link>
     );
   };
@@ -34,13 +37,20 @@ const SideBar = () => {
   return (
     <div className="side-bar">
       <div className="side-bar-header">
-          <Link to="/">
-            <img src="./back-arrow.svg" alt="Back" className="back-arw" />
-          </Link>
-          <p className="sb-title">Categories</p>
+
+        <button onClick={toggleSideBar} className="close-sidebar">
+          <img src="./back-arrow.svg" alt="Back" className="back-arw" />
+        </button>
+
+        <p className="sb-title">Categories</p>
       </div>
       {sideBarOptions.map((option, index) => (
-        <SideBarOption key={index} text={option.text} icon={option.icon} link={option.link}/>
+        <SideBarOption
+          key={index}
+          text={option.text}
+          icon={option.icon}
+          link={option.link}
+        />
       ))}
       <div className="side-bar-footer">
         <p>from</p>

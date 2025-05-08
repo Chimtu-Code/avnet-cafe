@@ -5,8 +5,11 @@ import MenuCategory from "../components/MenuCategory";
 import { supabase } from "../services/supabaseClient";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useSideBar } from "../context/SideBarContext";
+import SideBar from "./SideBar";
 
 const Home = () => {
+  const { showSideBar } = useSideBar();
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -102,7 +105,7 @@ const Home = () => {
       {showMenu && (
         <div className="food-menu">
           <button className="menu-close-btn" onClick={() => setShowMenu(false)}>
-            <img src="./down-arrow.svg" alt="x" />
+            <img src="./drop-down.svg" alt="x" />
           </button>
           <header>MENU</header>
           <div className="menu-list">
@@ -130,6 +133,7 @@ const Home = () => {
           </button>
         </Link>
       </div>
+      {showSideBar && <SideBar />}
     </div>
   );
 };

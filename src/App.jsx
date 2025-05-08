@@ -15,7 +15,6 @@ const App = () => {
           <Route path="/cart" element={<Cart />} />
           <Route path="/check-out" element={<CheckoutPage />}></Route>
           <Route path="/my-tokens" element={<MyTokens />}></Route>
-          <Route path="/side-bar" element={<SideBar />} ></Route>
         </Routes>
       </Router>
     </div>

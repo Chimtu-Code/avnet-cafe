@@ -3,13 +3,14 @@ import { createRoot } from "react-dom/client";
 import "./styles/index.css";
 import App from "./App.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
-import { SpeedInsights } from "@vercel/speed-insights/react";
-import { BrowserRouter } from "react-router-dom";
+import { SideBarProvider } from "./context/SideBarContext.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <CartProvider>
+      <SideBarProvider>
         <App />
+      </SideBarProvider>
     </CartProvider>
   </StrictMode>
 );

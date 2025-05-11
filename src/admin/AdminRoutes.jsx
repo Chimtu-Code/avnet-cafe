@@ -1,43 +1,84 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import AdminLogin from './pages/AdminLogin';
-import Dashboard from './pages/Dashboard';
-import CategoryManager from './pages/CategoryManager';
-import OrdersPending from './pages/OrdersPending';
-import OrdersCompleted from './pages/OrdersCompleted';
-import RevenueStats from './pages/RevenueStats';
+import React, { useEffect, useState } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { supabase } from "../services/supabaseClient";
+import AdminLogin from "./pages/AdminLogin";
+import Dashboard from "./pages/Dashboard";
+import ManageItems from "./pages/ManageItems";
+import OrdersPending from "./pages/OrdersPending";
+import OrdersCompleted from "./pages/OrdersCompleted";
+import SalesSummary from "./pages/SalesSummary";
 
-const isAdminAuthenticated = () => {
-  return sessionStorage.getItem('isAdmin') === 'true';
-};
+const ADMIN_EMAIL = "sushanth211107@gmail.com";
 
 const ProtectedRoute = ({ children }) => {
-  return isAdminAuthenticated() ? children : <Navigate to="/admin/login" />;
+  const [isAuth, setIsAuth] = useState(null); // null = loading
+  const location = useLocation();
+
+  useEffect(() => {
+    const verifySession = async () => {
+      const { data } = await supabase.auth.getSession();
+      const user = data?.session?.user;
+      const isValidAdmin = user && user.email === ADMIN_EMAIL;
+
+      if (isValidAdmin) {
+        localStorage.setItem("isAdmin", "true"); // Optional
+        setIsAuth(true);
+      } else {
+        localStorage.removeItem("isAdmin");
+        setIsAuth(false);
+      }
+    };
+
+    verifySession();
+  }, [location.pathname]);
+
+  if (isAuth === null) return null; // Or a loading spinner
+  return isAuth ? children : <Navigate to="/admin/login" />;
 };
 
 const AdminRoutes = () => {
   return (
     <Routes>
-      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="login" element={<AdminLogin />} />
       <Route
-        path="/admin"
-        element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
+        path=""
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
       />
       <Route
-        path="/admin/categories"
-        element={<ProtectedRoute><CategoryManager /></ProtectedRoute>}
+        path="orders/pending"
+        element={
+          <ProtectedRoute>
+            <OrdersPending />
+          </ProtectedRoute>
+        }
       />
       <Route
-        path="/admin/orders-pending"
-        element={<ProtectedRoute><OrdersPending /></ProtectedRoute>}
+        path="orders/completed"
+        element={
+          <ProtectedRoute>
+            <OrdersCompleted />
+          </ProtectedRoute>
+        }
       />
       <Route
-        path="/admin/orders-completed"
-        element={<ProtectedRoute><OrdersCompleted /></ProtectedRoute>}
+        path="manage-items"
+        element={
+          <ProtectedRoute>
+            <ManageItems />
+          </ProtectedRoute>
+        }
       />
       <Route
-        path="/admin/stats"
-        element={<ProtectedRoute><RevenueStats /></ProtectedRoute>}
+        path="sales-summary"
+        element={
+          <ProtectedRoute>
+            <SalesSummary />
+          </ProtectedRoute>
+        }
       />
     </Routes>
   );

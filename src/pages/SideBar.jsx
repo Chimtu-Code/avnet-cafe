@@ -20,7 +20,7 @@ const SideBar = () => {
     {
       text: "Admin Login",
       icon: "./admin-icon.svg",
-      link: "/admin-login",
+      link: "/admin/login",
     },
   ];
 

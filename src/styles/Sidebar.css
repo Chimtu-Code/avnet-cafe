@@ -1,6 +1,6 @@
 .side-bar{
   width: min(100vw, 22.5rem);
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,6 +9,12 @@
   top: 0;
   background-color: #FFF;
   z-index: 950;
+}
+
+@media screen and (max-width: 480px) {
+  .side-bar{
+    width: 100vw;
+  }
 }
 
 .side-bar-header{

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { supabase } from "../services/supabaseClient";
 import AdminLogin from "./pages/AdminLogin";
-import Dashboard from "./pages/Dashboard";
 import ManageItems from "./pages/ManageItems";
 import OrdersPending from "./pages/OrdersPending";
 import OrdersCompleted from "./pages/OrdersCompleted";
@@ -32,7 +31,7 @@ const ProtectedRoute = ({ children }) => {
     verifySession();
   }, [location.pathname]);
 
-  if (isAuth === null) return null; // Or a loading spinner
+  if (isAuth === null) return null;
   return isAuth ? children : <Navigate to="/admin/login" />;
 };
 
@@ -44,20 +43,12 @@ const AdminRoutes = () => {
         path=""
         element={
           <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="orders/pending"
-        element={
-          <ProtectedRoute>
             <OrdersPending />
           </ProtectedRoute>
         }
       />
       <Route
-        path="orders/completed"
+        path="orders-completed"
         element={
           <ProtectedRoute>
             <OrdersCompleted />

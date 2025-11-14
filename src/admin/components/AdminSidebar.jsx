@@ -1,4 +1,3 @@
-import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ShoppingBag, Clock, Package, TrendingUp } from "lucide-react";
 
@@ -25,17 +24,19 @@ const AdminSidebar = ({ isOpen }) => {
       <style>{`
         .admin-sidebar {
           width: ${isOpen ? "250px" : "0"};
+          height: 100vh;
           background: white;
           transition: width 0.3s ease;
           overflow: hidden;
           box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-          min-height: 100vh;
-          height: fit-content;
+          z-index: 998;
         }
 
         .sidebar-content {
           width: 250px;
           padding: 2rem 0;
+          height: 100%;
+          overflow-y: auto;
         }
 
         .nav-item {
@@ -63,9 +64,7 @@ const AdminSidebar = ({ isOpen }) => {
 
         @media (max-width: 768px) {
           .admin-sidebar {
-            position: fixed;
             z-index: 999;
-            height: 100vh;
           }
         }
       `}</style>

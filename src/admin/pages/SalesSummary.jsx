@@ -87,33 +87,25 @@ const SalesSummary = () => {
           flex: 1;
           display: flex;
           flex-direction: column;
-          min-width: 0;
         }
 
         .content-area {
           flex: 1;
           padding: 2rem;
           overflow-y: auto;
-          width: 100%;
-        }
-
-        .sales-content {
-          max-width: 1400px;
-          width: 100%;
         }
 
         .sales-cards {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
           gap: 1.5rem;
-          width: 100%;
+          max-width: 1400px;
         }
 
         .sales-card {
           background: white;
           border-radius: 10px;
-          padding: 1.5rem;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
         }
 
         .sales-card.highlighted {
@@ -121,27 +113,28 @@ const SalesSummary = () => {
         }
 
         .sales-card-header {
+          background: black;
+          color: white;
+          padding: 0.5rem 0.8rem;
+          border-top-left-radius: 10px;
+          border-top-right-radius: 10px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 1.5rem;
-        }
-
-        .sales-card-title {
-          font-size: 1.125rem;
-          font-weight: 600;
-        }
-
-        .sales-card-date {
+          font-family: Poppins;
           font-size: 0.875rem;
-          color: #666;
+          font-weight: 500;
+        }
+
+        .sales-card-body {
+          padding: 1rem 0.8rem;
+          border-bottom: 2px dotted green;
         }
 
         .sales-stats {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1.5rem;
-          margin-bottom: 1.5rem;
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 1rem;
         }
 
         .stat-item {
@@ -152,36 +145,47 @@ const SalesSummary = () => {
         .stat-label {
           font-size: 0.875rem;
           color: #666;
-          margin-bottom: 0.5rem;
+          margin-bottom: 0.25rem;
+          font-family: Poppins;
+          font-weight: 400;
         }
 
         .stat-value {
-          font-size: 1.75rem;
+          font-size: 1.5rem;
           font-weight: 700;
           color: #000;
+          font-family: Poppins;
         }
 
         .order-count {
-          font-size: 0.875rem;
-          color: #666;
-          margin-bottom: 1rem;
+          font-size: 1rem;
+          color: #000;
+          font-weight: 600;
+          font-family: Poppins;
+        }
+
+        .sales-card-footer {
+          padding: 1rem 0.8rem;
         }
 
         .sales-total {
-          padding-top: 1rem;
-          border-top: 2px solid #f0f0f0;
-          margin-bottom: 1.5rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
         }
 
         .sales-total-label {
           font-size: 0.875rem;
           color: #666;
-          margin-bottom: 0.5rem;
+          font-family: Poppins;
         }
 
         .sales-total-value {
           font-size: 1.25rem;
           font-weight: 700;
+          color: #000;
+          font-family: Poppins;
         }
 
         .btn-see-details {
@@ -329,10 +333,6 @@ const SalesSummary = () => {
             grid-template-columns: 1fr;
           }
 
-          .sales-stats {
-            grid-template-columns: 1fr;
-          }
-
           .sales-summary {
             grid-template-columns: 1fr;
           }
@@ -354,99 +354,105 @@ const SalesSummary = () => {
             currentPage="sales"
           />
           <div className="content-area">
-            <div className="sales-content">
-              <div className="sales-cards">
-                {/* Today's Sales */}
-                <div className="sales-card highlighted">
+            <div className="sales-cards">
+              {/* Today's Sales */}
+              <div className="sales-card highlighted">
                 <div className="sales-card-header">
-                  <span className="sales-card-title">Business</span>
-                  <span className="sales-card-date">Today</span>
+                  <span>BUSINESS</span>
+                  <span>TODAY</span>
                 </div>
 
-                <div className="sales-stats">
-                  <div className="stat-item">
-                    <span className="stat-label">Sales</span>
-                    <span className="stat-value">₹{salesData.today.sales}</span>
+                <div className="sales-card-body">
+                  <div className="sales-stats">
+                    <div className="stat-item">
+                      <span className="stat-label">Sales</span>
+                      <span className="stat-value">₹{salesData.today.sales}</span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">GST</span>
+                      <span className="stat-value">₹{salesData.today.gst}</span>
+                    </div>
                   </div>
-                  <div className="stat-item">
-                    <span className="stat-label">GST</span>
-                    <span className="stat-value">{salesData.today.gst}</span>
-                  </div>
-                </div>
 
-                <div className="order-count">
-                  {salesData.today.orderCount} Orders
-                </div>
-
-                <div className="sales-total">
-                  <div className="sales-total-label">Total Sales:</div>
-                  <div className="sales-total-value">
-                    ₹{salesData.today.totalSales}
+                  <div className="order-count">
+                    {salesData.today.orderCount} Orders
                   </div>
                 </div>
 
-                <button
-                  className="btn-see-details"
-                  onClick={() => handleSeeDetails(salesData.today, "Today")}
-                >
-                  See Details
-                </button>
+                <div className="sales-card-footer">
+                  <div className="sales-total">
+                    <span className="sales-total-label">TOTAL SALES</span>
+                    <span className="sales-total-value">
+                      ₹{salesData.today.totalSales}
+                    </span>
+                  </div>
+
+                  <button
+                    className="btn-see-details"
+                    onClick={() => handleSeeDetails(salesData.today, "Today")}
+                  >
+                    See Details
+                  </button>
+                </div>
               </div>
 
               {/* Yesterday's Sales */}
               <div className="sales-card">
                 <div className="sales-card-header">
-                  <span className="sales-card-title">Business</span>
-                  <span className="sales-card-date">
+                  <span>BUSINESS</span>
+                  <span>
                     {new Date(Date.now() - 86400000).toLocaleDateString(
                       "en-GB",
                       { day: "numeric", month: "short" }
-                    )}
+                    ).toUpperCase()}
                   </span>
                 </div>
 
-                <div className="sales-stats">
-                  <div className="stat-item">
-                    <span className="stat-label">Sales</span>
-                    <span className="stat-value">
-                      ₹{salesData.yesterday.sales}
+                <div className="sales-card-body">
+                  <div className="sales-stats">
+                    <div className="stat-item">
+                      <span className="stat-label">Sales</span>
+                      <span className="stat-value">
+                        ₹{salesData.yesterday.sales}
+                      </span>
+                    </div>
+                    <div className="stat-item">
+                      <span className="stat-label">GST</span>
+                      <span className="stat-value">₹{salesData.yesterday.gst}</span>
+                    </div>
+                  </div>
+
+                  <div className="order-count">
+                    {salesData.yesterday.orderCount} Orders
+                  </div>
+                </div>
+
+                <div className="sales-card-footer">
+                  <div className="sales-total">
+                    <span className="sales-total-label">TOTAL SALES</span>
+                    <span className="sales-total-value">
+                      ₹{salesData.yesterday.totalSales}
                     </span>
                   </div>
-                  <div className="stat-item">
-                    <span className="stat-label">GST</span>
-                    <span className="stat-value">{salesData.yesterday.gst}</span>
-                  </div>
-                </div>
 
-                <div className="order-count">
-                  {salesData.yesterday.orderCount} Orders
-                </div>
-
-                <div className="sales-total">
-                  <div className="sales-total-label">Total Sales:</div>
-                  <div className="sales-total-value">
-                    ₹{salesData.yesterday.totalSales}
-                  </div>
-                </div>
-
-                <button
-                  className="btn-see-details"
-                  onClick={() =>
-                    handleSeeDetails(
-                      salesData.yesterday,
-                      new Date(Date.now() - 86400000).toLocaleDateString(
-                        "en-GB",
-                        { day: "numeric", month: "long" }
+                  <button
+                    className="btn-see-details"
+                    onClick={() =>
+                      handleSeeDetails(
+                        salesData.yesterday,
+                        new Date(Date.now() - 86400000).toLocaleDateString(
+                          "en-GB",
+                          { day: "numeric", month: "long" }
+                        )
                       )
-                    )
-                  }
-                >
-                  See Details
-                </button>
+                    }
+                  >
+                    See Details
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
         </div>
       </div>
 

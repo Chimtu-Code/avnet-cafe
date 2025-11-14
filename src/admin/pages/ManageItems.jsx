@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../../services/supabaseClient";
 import AdminNavbar from "../components/AdminNavbar";
 import AdminSidebar from "../components/AdminSidebar";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Menu } from "lucide-react";
 
 const ManageItems = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [imageFile, setImageFile] = useState(null);
@@ -27,24 +29,27 @@ const ManageItems = () => {
   }, []);
 
   const fetchCategories = async () => {
-    const { data } = await supabase.from("categories").select("*");
+    const { data } = await supabase
+      .from("categories")
+      .select("*")
+      .order("created_at", { ascending: false });
     setCategories(data || []);
+    if (data && data.length > 0 && !selectedCategory) {
+      setSelectedCategory(data[0]);
+    }
   };
 
   const fetchItems = async () => {
     const { data } = await supabase
       .from("items")
       .select("*, categories(name)")
-      .order("category_id");
+      .order("category_id", { ascending: false });
     setItems(data || []);
   };
 
-  const groupedItems = items.reduce((acc, item) => {
-    const catName = item.categories?.name || "Uncategorized";
-    if (!acc[catName]) acc[catName] = [];
-    acc[catName].push(item);
-    return acc;
-  }, {});
+  const filteredItems = selectedCategory
+    ? items.filter((item) => item.category_id === selectedCategory.id)
+    : [];
 
   const handleToggleAvailability = async (itemId, available) => {
     const { error } = await supabase
@@ -62,7 +67,6 @@ const ManageItems = () => {
     try {
       let imageUrl = formData.image_url;
 
-      // Upload image if a new file is selected
       if (imageFile) {
         const fileExt = imageFile.name.split(".").pop();
         const fileName = `${Math.random()}.${fileExt}`;
@@ -74,7 +78,6 @@ const ManageItems = () => {
 
         if (uploadError) throw uploadError;
 
-        // Get public URL
         const {
           data: { publicUrl },
         } = supabase.storage.from("cafeteria-images").getPublicUrl(filePath);
@@ -107,7 +110,7 @@ const ManageItems = () => {
   };
 
   const handleDelete = async (itemId) => {
-    if (confirm("Are you sure you want to delete this item?")) {
+    if (window.confirm("Are you sure you want to delete this item?")) {
       const { error } = await supabase.from("items").delete().eq("id", itemId);
       if (!error) fetchItems();
     }
@@ -160,68 +163,40 @@ const ManageItems = () => {
           flex: 1;
           display: flex;
           flex-direction: column;
-          min-width: 0;
         }
 
         .content-area {
           flex: 1;
           padding: 2rem;
           overflow-y: auto;
-          width: 100%;
         }
 
-        .stock-content {
-          max-width: 1400px;
-          width: 100%;
-        }
-
-        .stock-header {
+        .page-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 2rem;
-          width: 100%;
+          margin-bottom: 1.5rem;
         }
 
-        .stock-header h2 {
+        .page-header h2 {
           font-size: 1.5rem;
           font-weight: 600;
         }
 
-        .btn-add {
+        .category-badge {
           background: black;
           color: white;
-          border: none;
-          padding: 0.75rem 1.5rem;
-          border-radius: 6px;
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
+          padding: 0.5rem 1rem;
+          border-radius: 20px;
+          font-size: 0.875rem;
           font-weight: 500;
-          font-family: inherit;
-          transition: background 0.2s;
-        }
-
-        .btn-add:hover {
-          background: #333;
-        }
-
-        .category-section {
-          margin-bottom: 2rem;
-          width: 100%;
-        }
-
-        .category-section h3 {
-          margin-bottom: 1rem;
-          font-size: 1.25rem;
-          font-weight: 600;
         }
 
         .items-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
           gap: 1.5rem;
+          max-width: 1400px;
         }
 
         .item-card {
@@ -240,6 +215,7 @@ const ManageItems = () => {
           object-fit: cover;
           border-radius: 8px;
           flex-shrink: 0;
+          background: #f0f0f0;
         }
 
         .item-info {
@@ -325,6 +301,103 @@ const ManageItems = () => {
 
         .icon-btn:hover {
           background: #e0e0e0;
+        }
+
+        .floating-category-btn {
+          position: fixed;
+          bottom: 2rem;
+          right: 2rem;
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background: black;
+          color: white;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+          transition: all 0.3s;
+          z-index: 900;
+        }
+
+        .floating-category-btn:hover {
+          transform: scale(1.1);
+          background: #333;
+        }
+
+        .category-menu-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+        }
+
+        .category-menu-content {
+          background: white;
+          padding: 2rem;
+          border-radius: 12px;
+          max-width: 400px;
+          width: 90%;
+          max-height: 70vh;
+          overflow-y: auto;
+        }
+
+        .category-menu-content h3 {
+          margin-bottom: 1.5rem;
+          font-size: 1.25rem;
+        }
+
+        .category-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .category-item {
+          padding: 1rem;
+          border: 2px solid #e0e0e0;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-weight: 500;
+        }
+
+        .category-item:hover {
+          border-color: black;
+          background: #f9f9f9;
+        }
+
+        .category-item.active {
+          border-color: black;
+          background: black;
+          color: white;
+        }
+
+        .btn-add {
+          background: black;
+          color: white;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+          font-weight: 500;
+          font-family: inherit;
+          transition: background 0.2s;
+        }
+
+        .btn-add:hover {
+          background: #333;
         }
 
         .modal-overlay {
@@ -471,6 +544,26 @@ const ManageItems = () => {
           background: #333;
         }
 
+        .btn-submit:disabled {
+          background: #999;
+          cursor: not-allowed;
+        }
+
+        .empty-state {
+          grid-column: 1 / -1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 4rem;
+          color: #999;
+        }
+
+        .empty-state p {
+          margin-top: 1rem;
+          font-size: 1.125rem;
+        }
+
         @media (max-width: 768px) {
           .items-grid {
             grid-template-columns: 1fr;
@@ -480,15 +573,10 @@ const ManageItems = () => {
             padding: 1rem;
           }
 
-          .stock-header {
+          .page-header {
             flex-direction: column;
             gap: 1rem;
             align-items: flex-start;
-          }
-
-          .btn-add {
-            width: 100%;
-            justify-content: center;
           }
 
           .item-card {
@@ -505,6 +593,11 @@ const ManageItems = () => {
             width: 100%;
             justify-content: space-between;
           }
+
+          .floating-category-btn {
+            bottom: 1rem;
+            right: 1rem;
+          }
         }
       `}</style>
 
@@ -517,9 +610,12 @@ const ManageItems = () => {
             currentPage="stock"
           />
           <div className="content-area">
-            <div className="stock-content">
-              <div className="stock-header">
-                <h2>Menu Management</h2>
+            <div className="page-header">
+              <h2>Menu Management</h2>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                {selectedCategory && (
+                  <span className="category-badge">{selectedCategory.name}</span>
+                )}
                 <button
                   className="btn-add"
                   onClick={() => {
@@ -530,61 +626,92 @@ const ManageItems = () => {
                   <Plus size={20} /> Add Item
                 </button>
               </div>
+            </div>
 
-              {Object.entries(groupedItems).map(([category, categoryItems]) => (
-                <div key={category} className="category-section">
-                  <h3>{category}</h3>
-                  <div className="items-grid">
-                    {categoryItems.map((item) => (
-                      <div key={item.id} className="item-card">
-                        <img
-                          src={item.image_url || "/api/placeholder/80/80"}
-                          alt={item.name}
-                          className="item-image"
-                        />
-                        <div className="item-info">
-                          <h4>{item.name}</h4>
-                          <p className="item-price">₹{item.price}</p>
-                        </div>
-                        <div className="item-actions">
-                          <label className="toggle-switch">
-                            <input
-                              type="checkbox"
-                              checked={item.avaliable}
-                              onChange={() =>
-                                handleToggleAvailability(item.id, !item.avaliable)
-                              }
-                            />
-                            <span className="toggle-slider"></span>
-                          </label>
-                          <button
-                            className="icon-btn"
-                            onClick={() => startEdit(item)}
-                          >
-                            <Edit size={18} />
-                          </button>
-                          <button
-                            className="icon-btn"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+            <div className="items-grid">
+              {filteredItems.length === 0 ? (
+                <div className="empty-state">
+                  <Menu size={64} />
+                  <p>No items in this category</p>
                 </div>
-              ))}
+              ) : (
+                filteredItems.map((item) => (
+                  <div key={item.id} className="item-card">
+                    <img
+                      src={item.image_url || "/api/placeholder/80/80"}
+                      alt={item.name}
+                      className="item-image"
+                    />
+                    <div className="item-info">
+                      <h4>{item.name}</h4>
+                      <p className="item-price">₹{item.price}</p>
+                    </div>
+                    <div className="item-actions">
+                      <label className="toggle-switch">
+                        <input
+                          type="checkbox"
+                          checked={item.avaliable}
+                          onChange={() =>
+                            handleToggleAvailability(item.id, !item.avaliable)
+                          }
+                        />
+                        <span className="toggle-slider"></span>
+                      </label>
+                      <button
+                        className="icon-btn"
+                        onClick={() => startEdit(item)}
+                      >
+                        <Edit size={18} />
+                      </button>
+                      <button
+                        className="icon-btn"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
       </div>
 
+      <button
+        className="floating-category-btn"
+        onClick={() => setShowCategoryMenu(true)}
+      >
+        <Menu size={24} />
+      </button>
+
+      {showCategoryMenu && (
+        <div className="category-menu-overlay" onClick={() => setShowCategoryMenu(false)}>
+          <div className="category-menu-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Select Category</h3>
+            <div className="category-list">
+              {categories.map((category) => (
+                <div
+                  key={category.id}
+                  className={`category-item ${selectedCategory?.id === category.id ? 'active' : ''}`}
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    setShowCategoryMenu(false);
+                  }}
+                >
+                  {category.name}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {showForm && (
         <div className="modal-overlay" onClick={resetForm}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>{editingItem ? "Edit Item" : "Add New Item"}</h3>
-            <form className="item-form" onSubmit={handleSubmit}>
+            <div className="item-form">
               <input
                 type="text"
                 placeholder="Item Name"
@@ -592,7 +719,6 @@ const ManageItems = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                required
               />
               <input
                 type="number"
@@ -601,7 +727,6 @@ const ManageItems = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, price: e.target.value })
                 }
-                required
               />
               <textarea
                 placeholder="Description (optional)"
@@ -615,7 +740,6 @@ const ManageItems = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, category_id: e.target.value })
                 }
-                required
               >
                 <option value="">Select Category</option>
                 {categories.map((cat) => (
@@ -625,7 +749,6 @@ const ManageItems = () => {
                 ))}
               </select>
 
-              {/* Image Upload */}
               <div className="file-input-wrapper">
                 <label
                   htmlFor="image-upload"
@@ -642,7 +765,7 @@ const ManageItems = () => {
                   type="file"
                   accept="image/*"
                   onChange={(e) => {
-                    const file = e.target.files[0];
+                    const file = e.target.files?.[0];
                     if (file) {
                       setImageFile(file);
                     }
@@ -650,7 +773,6 @@ const ManageItems = () => {
                 />
               </div>
 
-              {/* Image Preview */}
               {(imageFile || formData.image_url) && (
                 <img
                   src={
@@ -674,10 +796,10 @@ const ManageItems = () => {
                 Available in Stock
               </label>
               <div className="form-actions">
-                <button type="button" onClick={resetForm} className="btn-cancel">
+                <button onClick={resetForm} className="btn-cancel">
                   Cancel
                 </button>
-                <button type="submit" className="btn-submit" disabled={uploading}>
+                <button onClick={handleSubmit} className="btn-submit" disabled={uploading}>
                   {uploading
                     ? "Uploading..."
                     : editingItem
@@ -685,7 +807,7 @@ const ManageItems = () => {
                     : "Add Item"}
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

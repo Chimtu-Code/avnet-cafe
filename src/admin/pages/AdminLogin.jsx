@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../services/supabaseClient";
 
-const ADMIN_EMAIL = "avnet@gmail.com";
+const ADMIN_EMAIL = "venkatavugaddi@gmail.com";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");

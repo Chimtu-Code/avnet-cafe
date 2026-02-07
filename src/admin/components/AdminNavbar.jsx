@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { supabase } from "../../services/supabaseClient";
+import { broadcastStatusUpdate } from "../utils/BroadCastHelper";
 
 const AdminNavbar = ({ onToggleSidebar, sidebarOpen, currentPage }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -37,6 +38,10 @@ const AdminNavbar = ({ onToggleSidebar, sidebarOpen, currentPage }) => {
       .from("restaurant_settings")
       .update({ is_open: newStatus })
       .eq("id", 1);
+
+    if(!error) {
+      await broadcastStatusUpdate();
+    }
 
     if (error) {
       console.error("Error updating status:", error);

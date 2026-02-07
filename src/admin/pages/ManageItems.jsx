@@ -3,6 +3,7 @@ import { supabase } from "../../services/supabaseClient";
 import AdminNavbar from "../components/AdminNavbar";
 import AdminSidebar from "../components/AdminSidebar";
 import { Plus, Edit, Trash2, Menu } from "lucide-react";
+import { broadcastMenuUpdate } from "../utils/BroadCastHelper";
 
 const ManageItems = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -57,7 +58,12 @@ const ManageItems = () => {
       .update({ avaliable: available })
       .eq("id", itemId);
 
-    if (!error) fetchItems();
+    if (!error) {
+      fetchItems();
+      // 👇 BROADCAST: Notify all users about availability change
+      await broadcastMenuUpdate();
+      console.log('✅ Availability update broadcast sent');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -67,43 +73,76 @@ const ManageItems = () => {
     try {
       let imageUrl = formData.image_url;
 
+      // Upload image if a new file is selected
       if (imageFile) {
         const fileExt = imageFile.name.split(".").pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `items/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("cafeteria-images")
+          .from("food-images")
           .upload(filePath, imageFile);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          throw uploadError;
+        }
 
         const {
           data: { publicUrl },
-        } = supabase.storage.from("cafeteria-images").getPublicUrl(filePath);
+        } = supabase.storage.from("food-images").getPublicUrl(filePath);
 
         imageUrl = publicUrl;
       }
 
-      const itemData = { ...formData, image_url: imageUrl };
+      const itemData = { 
+        ...formData, 
+        image_url: imageUrl,
+        price: parseFloat(formData.price) // Ensure price is a number
+      };
 
       if (editingItem) {
+        // UPDATE existing item
         const { error } = await supabase
           .from("items")
           .update(itemData)
           .eq("id", editingItem.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Update error:", error);
+          throw error;
+        }
+
+        alert("✅ Item updated successfully!");
+        
+        // 👇 BROADCAST: Notify all users about item update
+        await broadcastMenuUpdate();
+        console.log('✅ Item update broadcast sent');
+        
       } else {
-        const { error } = await supabase.from("items").insert([itemData]);
-        if (error) throw error;
+        // INSERT new item
+        const { error } = await supabase
+          .from("items")
+          .insert([itemData]);
+
+        if (error) {
+          console.error("Insert error:", error);
+          throw error;
+        }
+
+        alert("✅ Item added successfully!");
+        
+        // 👇 BROADCAST: Notify all users about new item
+        await broadcastMenuUpdate();
+        console.log('✅ New item broadcast sent');
       }
 
       resetForm();
       fetchItems();
+      
     } catch (error) {
       console.error("Error:", error);
-      alert("Failed to save item. Please try again.");
+      alert(`Failed to save item: ${error.message}`);
     } finally {
       setUploading(false);
     }
@@ -111,8 +150,19 @@ const ManageItems = () => {
 
   const handleDelete = async (itemId) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
-      const { error } = await supabase.from("items").delete().eq("id", itemId);
-      if (!error) fetchItems();
+      const { error } = await supabase
+        .from("items")
+        .delete()
+        .eq("id", itemId);
+      
+      if (!error) {
+        fetchItems();
+        alert("✅ Item deleted successfully!");
+        
+        // 👇 BROADCAST: Notify all users about deletion
+        await broadcastMenuUpdate();
+        console.log('✅ Item deletion broadcast sent');
+      }
     }
   };
 
@@ -638,7 +688,7 @@ const ManageItems = () => {
                 filteredItems.map((item) => (
                   <div key={item.id} className="item-card">
                     <img
-                      src={item.image_url || "/api/placeholder/80/80"}
+                      src={item.image_url || "./food-img.svg"}
                       alt={item.name}
                       className="item-image"
                     />
@@ -711,7 +761,7 @@ const ManageItems = () => {
         <div className="modal-overlay" onClick={resetForm}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h3>{editingItem ? "Edit Item" : "Add New Item"}</h3>
-            <div className="item-form">
+            <form className="item-form" onSubmit={handleSubmit}>
               <input
                 type="text"
                 placeholder="Item Name"
@@ -719,6 +769,7 @@ const ManageItems = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
+                required
               />
               <input
                 type="number"
@@ -727,6 +778,9 @@ const ManageItems = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, price: e.target.value })
                 }
+                required
+                step="0.01"
+                min="0"
               />
               <textarea
                 placeholder="Description (optional)"
@@ -740,6 +794,7 @@ const ManageItems = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, category_id: e.target.value })
                 }
+                required
               >
                 <option value="">Select Category</option>
                 {categories.map((cat) => (
@@ -796,10 +851,10 @@ const ManageItems = () => {
                 Available in Stock
               </label>
               <div className="form-actions">
-                <button onClick={resetForm} className="btn-cancel">
+                <button type="button" onClick={resetForm} className="btn-cancel">
                   Cancel
                 </button>
-                <button onClick={handleSubmit} className="btn-submit" disabled={uploading}>
+                <button type="submit" className="btn-submit" disabled={uploading}>
                   {uploading
                     ? "Uploading..."
                     : editingItem
@@ -807,7 +862,7 @@ const ManageItems = () => {
                     : "Add Item"}
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}

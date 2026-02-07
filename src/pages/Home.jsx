@@ -1,4 +1,4 @@
-import { useState, React, useEffect } from "react";
+import { useState, React, useEffect, useRef } from "react";
 import Navbar from "../components/Navbar";
 import "../styles/Home.css";
 import MenuCategory from "../components/MenuCategory";
@@ -16,36 +16,69 @@ const Home = () => {
   const { getTotalItems } = useCart();
   const [showMenu, setShowMenu] = useState(false);
   const [restaurantOpen, setRestaurantOpen] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const pollingIntervalRef = useRef(null);
+  const channelRef = useRef(null);
 
   useEffect(() => {
+    // Initial fetch
     fetchMenuData();
     checkRestaurantStatus();
 
-    // Subscribe to real-time status updates
-    const subscription = supabase
-      .channel('restaurant_status')
-      .on('postgres_changes', 
-        { event: 'UPDATE', schema: 'public', table: 'restaurant_settings' },
-        (payload) => {
-          setRestaurantOpen(payload.new.is_open);
-        }
-      )
+    // Set up Supabase Broadcast Channel for real-time updates
+    channelRef.current = supabase
+      .channel('menu-updates')
+      .on('broadcast', { event: 'menu-changed' }, () => {
+        console.log('Menu update broadcast received');
+        fetchMenuDataSilently();
+      })
+      .on('broadcast', { event: 'status-changed' }, () => {
+        console.log('Status update broadcast received');
+        checkRestaurantStatus();
+      })
       .subscribe();
 
+    // Fallback polling: Every 5 minutes (much less aggressive)
+    pollingIntervalRef.current = setInterval(() => {
+      fetchMenuDataSilently();
+      checkRestaurantStatus();
+    }, 300000); // 5 minutes = 300000ms
+
+    // Handle page visibility - fetch when user returns to tab
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchMenuDataSilently();
+        checkRestaurantStatus();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
     return () => {
-      subscription.unsubscribe();
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
   const checkRestaurantStatus = async () => {
-    const { data } = await supabase
-      .from("restaurant_settings")
-      .select("is_open")
-      .eq("id", 1)
-      .single();
+    try {
+      const { data } = await supabase
+        .from("restaurant_settings")
+        .select("is_open")
+        .eq("id", 1)
+        .single();
 
-    if (data) {
-      setRestaurantOpen(data.is_open);
+      if (data) {
+        setRestaurantOpen(data.is_open);
+      }
+    } catch (error) {
+      console.error("Error checking restaurant status:", error);
     }
   };
 
@@ -55,24 +88,70 @@ const Home = () => {
 
       const { data: categoryData, error: categoryError } = await supabase
         .from("categories")
-        .select("*");
+        .select("*")
+        .order('id', { ascending: true });
 
       if (categoryError) throw categoryError;
 
       const { data: itemData, error: itemError } = await supabase
         .from("items")
         .select("*")
-        .is("avaliable", true);
+        .is("avaliable", true)
+        .order('id', { ascending: true });
 
       if (itemError) throw itemError;
 
-      setCategories(categoryData);
-      setItems(itemData);
+      setCategories(categoryData || []);
+      setItems(itemData || []);
+      setLastUpdated(new Date());
     } catch (error) {
       console.error("Error fetching menu:", error.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Silent fetch without showing loading state
+  const fetchMenuDataSilently = async () => {
+    try {
+      const { data: categoryData, error: categoryError } = await supabase
+        .from("categories")
+        .select("*")
+        .order('id', { ascending: true });
+
+      if (categoryError) throw categoryError;
+
+      const { data: itemData, error: itemError } = await supabase
+        .from("items")
+        .select("*")
+        .is("avaliable", true)
+        .order('id', { ascending: true });
+
+      if (itemError) throw itemError;
+
+      // Only update if data has actually changed
+      setCategories((prev) => {
+        const hasChanged = JSON.stringify(prev) !== JSON.stringify(categoryData);
+        return hasChanged ? (categoryData || []) : prev;
+      });
+
+      setItems((prev) => {
+        const hasChanged = JSON.stringify(prev) !== JSON.stringify(itemData);
+        return hasChanged ? (itemData || []) : prev;
+      });
+      
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error("Error polling menu data:", error.message);
+    }
+  };
+
+  // Manual refresh function
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchMenuDataSilently();
+    await checkRestaurantStatus();
+    setTimeout(() => setIsRefreshing(false), 500);
   };
 
   const handleCategoryClick = (categoryId) => {
@@ -198,6 +277,62 @@ const Home = () => {
           padding: 0 1rem;
         }
 
+        .refresh-button {
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          z-index: 100;
+          background: #fff;
+          border: 2px solid #ff6b35;
+          border-radius: 50%;
+          width: 50px;
+          height: 50px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          transition: all 0.3s ease;
+        }
+
+        .refresh-button:hover {
+          transform: scale(1.1);
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .refresh-button:active {
+          transform: scale(0.95);
+        }
+
+        .refresh-button.refreshing {
+          animation: spin 0.5s linear infinite;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .refresh-icon {
+          width: 24px;
+          height: 24px;
+          color: #ff6b35;
+        }
+
+        .last-updated {
+          position: fixed;
+          top: 75px;
+          right: 20px;
+          z-index: 100;
+          background: rgba(255, 255, 255, 0.95);
+          padding: 6px 12px;
+          border-radius: 20px;
+          font-size: 0.75rem;
+          color: #666;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          font-family: 'Poppins', sans-serif;
+        }
+
         @media (max-width: 768px) {
           .closed-sign {
             width: 250px;
@@ -215,8 +350,38 @@ const Home = () => {
           .closed-message {
             font-size: 1rem;
           }
+
+          .refresh-button {
+            width: 45px;
+            height: 45px;
+            top: 15px;
+            right: 15px;
+          }
+
+          .last-updated {
+            top: 65px;
+            right: 15px;
+            font-size: 0.7rem;
+          }
         }
       `}</style>
+
+      {/* Manual Refresh Button */}
+      <button 
+        className={`refresh-button ${isRefreshing ? 'refreshing' : ''}`}
+        onClick={handleManualRefresh}
+        disabled={isRefreshing}
+        title="Refresh menu"
+      >
+        <svg className="refresh-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+      </button>
+
+      {/* Last Updated Indicator */}
+      <div className="last-updated">
+        Updated {lastUpdated.toLocaleTimeString()}
+      </div>
 
       {!restaurantOpen && (
         <div className="closed-overlay">

@@ -1,3 +1,13 @@
+// OrdersPending.jsx
+// Note: This file doesn't need broadcast updates because:
+// 1. Orders are created by users (frontend), not admin
+// 2. Admin only marks orders as complete (status change)
+// 3. Users don't need real-time order status updates in this app flow
+//
+// If you want users to see their order status change in real-time,
+// you would need to add broadcast to the confirmComplete function
+// and listen for it on the user's order tracking page.
+
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../services/supabaseClient";
 import AdminNavbar from "../components/AdminNavbar";
@@ -13,8 +23,8 @@ const OrdersPending = () => {
 
   useEffect(() => {
     fetchOrders();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchOrders, 30000);
+    // Auto-refresh every 30 seconds to get new orders
+    const interval = setInterval(fetchOrders, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -47,6 +57,9 @@ const OrdersPending = () => {
       setShowModal(false);
       setSelectedOrder(null);
       fetchOrders();
+      
+      // Optional: If you want to notify users about order completion
+      // await broadcastOrderUpdate();
     }
   };
 

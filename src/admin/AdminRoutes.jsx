@@ -7,7 +7,7 @@ import OrdersPending from "./pages/OrdersPending";
 import OrdersCompleted from "./pages/OrdersCompleted";
 import SalesSummary from "./pages/SalesSummary";
 
-const ADMIN_EMAIL = "sushanth211107@gmail.com";
+const ADMIN_EMAIL = "avnet@gmail.com";
 
 const ProtectedRoute = ({ children }) => {
   const [isAuth, setIsAuth] = useState(null); // null = loading

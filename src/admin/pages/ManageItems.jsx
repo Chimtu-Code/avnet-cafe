@@ -1,12 +1,230 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../services/supabaseClient";
 import AdminNavbar from "../components/AdminNavbar";
-import AdminSidebar from "../components/AdminSidebar";
 import { Plus, Edit, Trash2, Menu } from "lucide-react";
 import { broadcastMenuUpdate } from "../utils/BroadCastHelper";
 
+/* Same shell as other pages — only items-grid uses 280px so more cards fit */
+const SHARED = `
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  .admin-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    width:100vw;
+    background: #f5f5f5;
+    font-family: 'Poppins', sans-serif;
+  }
+  .page-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.75rem 2rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.1rem;
+    width: 100%;
+  }
+  .a-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 5px rgba(0,0,0,.08);
+    overflow: hidden;
+    transition: box-shadow .2s;
+  }
+  .a-card:hover {
+    box-shadow: 0 4px 18px rgba(0,0,0,.13);
+  }
+  .empty-state {
+    grid-column: 1/-1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 2rem;
+    color: #ccc;
+    gap: .75rem;
+  }
+  .empty-state p {
+    color: #aaa;
+    font-size: .92rem;
+  }
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.48);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    padding: 1rem;
+  }
+  .modal-box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.65rem;
+    width: 100%;
+    max-width: 450px;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+  .modal-box h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+  .cat-box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.65rem;
+    width: 100%;
+    max-width: 340px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+  .cat-box h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: .9rem;
+  }
+  .cat-list {
+    display: flex;
+    flex-direction: column;
+    gap: .48rem;
+  }
+  .cat-item {
+    padding: .75rem .9rem;
+    border: 2px solid #e5e5e5;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: .85rem;
+    font-weight: 500;
+    transition: all .18s;
+  }
+  .cat-item:hover {
+    border-color: #000;
+    background: #fafafa;
+  }
+  .cat-item.active {
+    border-color: #000;
+    background: #000;
+    color: #fff;
+  }
+  .item-form {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .item-form input,
+  .item-form textarea,
+  .item-form select {
+    padding: .65rem .85rem;
+    border: 1.5px solid #e5e5e5;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: .875rem;
+    background: #fafafa;
+    width: 100%;
+    transition: border-color .2s, background .2s;
+  }
+  .item-form input:focus,
+  .item-form textarea:focus,
+  .item-form select:focus {
+    outline: none;
+    border-color: #000;
+    background: #fff;
+  }
+  .item-form textarea {
+    resize: vertical;
+    min-height: 66px;
+  }
+  .file-lbl {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .38rem;
+    padding: .65rem;
+    border: 1.5px dashed #ddd;
+    border-radius: 8px;
+    background: #fafafa;
+    cursor: pointer;
+    font-size: .83rem;
+    color: #777;
+    transition: all .2s;
+  }
+  .file-lbl:hover {
+    border-color: #000;
+    background: #f0f0f0;
+  }
+  .file-lbl.got-file {
+    border-color: #4caf50;
+    background: #f0fdf4;
+    color: #16a34a;
+  }
+  .img-prev {
+    width: 100%;
+    height: 125px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  .chk-lbl {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    font-size: .83rem;
+    cursor: pointer;
+  }
+  .form-actions {
+    display: flex;
+    gap: .65rem;
+  }
+  .btn-c,
+  .btn-k {
+    flex: 1;
+    padding: .7rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: inherit;
+    font-size: .875rem;
+    transition: all .2s;
+  }
+  .btn-c {
+    background: #f0f0f0;
+  }
+  .btn-c:hover {
+    background: #e0e0e0;
+  }
+  .btn-k {
+    background: #000;
+    color: #fff;
+  }
+  .btn-k:hover {
+    background: #222;
+  }
+  .btn-k:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+  @media (max-width: 768px) {
+    .page-body {
+      padding: 1rem;
+    }
+    .cards-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+`;
+
 const ManageItems = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -14,6 +232,7 @@ const ManageItems = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -27,159 +246,142 @@ const ManageItems = () => {
   useEffect(() => {
     fetchCategories();
     fetchItems();
+    const ch = supabase
+      .channel("items-rt")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "items" },
+        fetchItems,
+      )
+      .subscribe();
+    return () => supabase.removeChannel(ch);
   }, []);
+
+  useEffect(() => {
+     const checkAuth = async () => {
+       const { data: { user }, error } = await supabase.auth.getUser();
+       console.log('Current user:', user);
+       console.log('Auth error:', error);
+     };
+     checkAuth();
+   }, []);
 
   const fetchCategories = async () => {
     const { data } = await supabase
       .from("categories")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: true });
     setCategories(data || []);
-    if (data && data.length > 0 && !selectedCategory) {
-      setSelectedCategory(data[0]);
-    }
+    setSelectedCategory((p) => p ?? data?.[0] ?? null);
   };
 
   const fetchItems = async () => {
     const { data } = await supabase
       .from("items")
       .select("*, categories(name)")
-      .order("category_id", { ascending: false });
+      .order("created_at", { ascending: true });
     setItems(data || []);
   };
 
   const filteredItems = selectedCategory
-    ? items.filter((item) => item.category_id === selectedCategory.id)
+    ? items.filter((i) => i.category_id === selectedCategory.id)
     : [];
 
-  const handleToggleAvailability = async (itemId, available) => {
+  const handleToggle = async (id, val) => {
+    setItems((p) => p.map((i) => (i.id === id ? { ...i, avaliable: val } : i)));
     const { error } = await supabase
       .from("items")
-      .update({ avaliable: available })
-      .eq("id", itemId);
+      .update({ avaliable: val })
+      .eq("id", id);
+    if (!error) await broadcastMenuUpdate();
+    else
+      setItems((p) =>
+        p.map((i) => (i.id === id ? { ...i, avaliable: !val } : i)),
+      );
+  };
 
-    if (!error) {
-      fetchItems();
-      // 👇 BROADCAST: Notify all users about availability change
-      await broadcastMenuUpdate();
-      console.log('✅ Availability update broadcast sent');
-    }
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    if (imagePreviewUrl.startsWith("blob:"))
+      URL.revokeObjectURL(imagePreviewUrl);
+    setImagePreviewUrl(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.category_id) {
+      alert("Please select a category.");
+      return;
+    }
     setUploading(true);
-
     try {
       let imageUrl = formData.image_url;
-
-      // Upload image if a new file is selected
       if (imageFile) {
-        const fileExt = imageFile.name.split(".").pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `items/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
+        const ext = imageFile.name.split(".").pop();
+        const path = `items/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: upErr } = await supabase.storage
           .from("food-images")
-          .upload(filePath, imageFile);
-
-        if (uploadError) {
-          console.error("Upload error:", uploadError);
-          throw uploadError;
-        }
-
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from("food-images").getPublicUrl(filePath);
-
-        imageUrl = publicUrl;
+          .upload(path, imageFile);
+        if (upErr) throw upErr;
+        imageUrl = supabase.storage.from("food-images").getPublicUrl(path)
+          .data.publicUrl;
       }
-
-      const itemData = { 
-        ...formData, 
-        image_url: imageUrl,
-        price: parseFloat(formData.price) // Ensure price is a number
+      const payload = {
+        name: formData.name.trim(),
+        price: parseFloat(formData.price),
+        description: formData.description.trim() || null,
+        category_id: formData.category_id,
+        image_url: imageUrl || null,
+        avaliable: formData.avaliable,
       };
-
       if (editingItem) {
-        // UPDATE existing item
         const { error } = await supabase
           .from("items")
-          .update(itemData)
+          .update(payload)
           .eq("id", editingItem.id);
-
-        if (error) {
-          console.error("Update error:", error);
-          throw error;
-        }
-
-        alert("✅ Item updated successfully!");
-        
-        // 👇 BROADCAST: Notify all users about item update
-        await broadcastMenuUpdate();
-        console.log('✅ Item update broadcast sent');
-        
+        if (error) throw error;
       } else {
-        // INSERT new item
-        const { error } = await supabase
-          .from("items")
-          .insert([itemData]);
-
-        if (error) {
-          console.error("Insert error:", error);
-          throw error;
-        }
-
-        alert("✅ Item added successfully!");
-        
-        // 👇 BROADCAST: Notify all users about new item
-        await broadcastMenuUpdate();
-        console.log('✅ New item broadcast sent');
+        const { error } = await supabase.from("items").insert([payload]);
+        if (error) throw error;
       }
-
+      await broadcastMenuUpdate();
       resetForm();
       fetchItems();
-      
-    } catch (error) {
-      console.error("Error:", error);
-      alert(`Failed to save item: ${error.message}`);
+    } catch (err) {
+      alert(`Failed to save: ${err.message}`);
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDelete = async (itemId) => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      const { error } = await supabase
-        .from("items")
-        .delete()
-        .eq("id", itemId);
-      
-      if (!error) {
-        fetchItems();
-        alert("✅ Item deleted successfully!");
-        
-        // 👇 BROADCAST: Notify all users about deletion
-        await broadcastMenuUpdate();
-        console.log('✅ Item deletion broadcast sent');
-      }
-    }
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this item?")) return;
+    setItems((p) => p.filter((i) => i.id !== id));
+    const { error } = await supabase.from("items").delete().eq("id", id);
+    if (!error) await broadcastMenuUpdate();
+    else fetchItems();
   };
 
   const startEdit = (item) => {
     setEditingItem(item);
+    setImageFile(null);
+    setImagePreviewUrl(item.image_url || "");
     setFormData({
       name: item.name || "",
-      price: item.price || "",
+      price: item.price ?? "",
       description: item.description || "",
       category_id: item.category_id || "",
       image_url: item.image_url || "",
-      avaliable: item.avaliable,
+      avaliable: item.avaliable ?? true,
     });
     setShowForm(true);
   };
 
   const resetForm = () => {
+    if (imagePreviewUrl.startsWith("blob:"))
+      URL.revokeObjectURL(imagePreviewUrl);
     setFormData({
       name: "",
       price: "",
@@ -189,567 +391,280 @@ const ManageItems = () => {
       avaliable: true,
     });
     setImageFile(null);
+    setImagePreviewUrl("");
     setEditingItem(null);
     setShowForm(false);
   };
 
   return (
     <>
-      <style>{`
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-
-        .admin-layout {
+      <style>
+        {SHARED}
+        {`
+        /* ── Item card layout (unique to this page) ── */
+        .item-card-inner {
+          padding: .85rem;
           display: flex;
-          min-height: 100vh;
-          background: #f5f5f5;
-          font-family: 'Poppins', sans-serif;
+          gap: .75rem;
+          align-items: center;
         }
-
-        .main-content {
+        .item-img {
+          width: 64px;
+          height: 64px;
+          object-fit: cover;
+          border-radius: 8px;
+          flex-shrink: 0;
+          background: #f0f0f0;
+        }
+        .item-info {
           flex: 1;
+          min-width: 0;
+        }
+        .item-name {
+          font-size: .875rem;
+          font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          margin-bottom: .18rem;
+        }
+        .item-name.dim {
+          color: #c0c0c0;
+        }
+        .item-price {
+          font-size: .8rem;
+          color: #555;
+          font-weight: 600;
+        }
+        .item-actions {
           display: flex;
-          flex-direction: column;
+          gap: .38rem;
+          align-items: center;
+          flex-shrink: 0;
         }
-
-        .content-area {
-          flex: 1;
-          padding: 2rem;
-          overflow-y: auto;
+        .toggle-sw {
+          position: relative;
+          width: 42px;
+          height: 22px;
         }
-
+        .toggle-sw input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+        .tog-track {
+          position: absolute;
+          inset: 0;
+          background: #d1d5db;
+          border-radius: 999px;
+          cursor: pointer;
+          transition: background .28s;
+        }
+        .tog-track:before {
+          content: "";
+          position: absolute;
+          width: 14px;
+          height: 14px;
+          top: 4px;
+          left: 4px;
+          background: #fff;
+          border-radius: 50%;
+          transition: transform .28s;
+        }
+        .toggle-sw input:checked + .tog-track {
+          background: #4caf50;
+        }
+        .toggle-sw input:checked + .tog-track:before {
+          transform: translateX(20px);
+        }
+        .icon-btn {
+          background: #f0f0f0;
+          border: none;
+          padding: .4rem;
+          border-radius: 6px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          color: #333;
+          transition: background .18s, color .18s;
+        }
+        .icon-btn:hover {
+          background: #e0e0e0;
+        }
+        .icon-btn.del:hover {
+          background: #fee2e2;
+          color: #dc2626;
+        }
+        /* page header */
         .page-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
           margin-bottom: 1.5rem;
+          flex-wrap: wrap;
+          gap: .75rem;
         }
-
         .page-header h2 {
-          font-size: 1.5rem;
+          font-size: 1.15rem;
           font-weight: 600;
         }
-
-        .category-badge {
-          background: black;
-          color: white;
-          padding: 0.5rem 1rem;
+        .header-right {
+          display: flex;
+          align-items: center;
+          gap: .65rem;
+          flex-wrap: wrap;
+        }
+        .cat-badge {
+          background: #000;
+          color: #fff;
+          padding: .32rem .85rem;
           border-radius: 20px;
-          font-size: 0.875rem;
+          font-size: .75rem;
           font-weight: 500;
         }
-
-        .items-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 1.5rem;
-          max-width: 1400px;
-        }
-
-        .item-card {
-          background: white;
-          border-radius: 10px;
-          padding: 1rem;
-          display: flex;
-          gap: 1rem;
-          align-items: center;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .item-image {
-          width: 80px;
-          height: 80px;
-          object-fit: cover;
-          border-radius: 8px;
-          flex-shrink: 0;
-          background: #f0f0f0;
-        }
-
-        .item-info {
-          flex: 1;
-          min-width: 0;
-        }
-
-        .item-info h4 {
-          margin-bottom: 0.25rem;
-          font-size: 1rem;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .item-price {
-          color: #666;
-          font-weight: 600;
-        }
-
-        .item-actions {
-          display: flex;
-          gap: 0.5rem;
-          align-items: center;
-          flex-shrink: 0;
-        }
-
-        .toggle-switch {
-          position: relative;
-          width: 50px;
-          height: 26px;
-        }
-
-        .toggle-switch input {
-          opacity: 0;
-          width: 0;
-          height: 0;
-        }
-
-        .toggle-slider {
-          position: absolute;
-          cursor: pointer;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-color: #ccc;
-          transition: 0.4s;
-          border-radius: 34px;
-        }
-
-        .toggle-slider:before {
-          position: absolute;
-          content: "";
-          height: 18px;
-          width: 18px;
-          left: 4px;
-          bottom: 4px;
-          background-color: white;
-          transition: 0.4s;
-          border-radius: 50%;
-        }
-
-        .toggle-switch input:checked + .toggle-slider {
-          background-color: #4caf50;
-        }
-
-        .toggle-switch input:checked + .toggle-slider:before {
-          transform: translateX(24px);
-        }
-
-        .icon-btn {
-          background: #f0f0f0;
-          border: none;
-          padding: 0.5rem;
-          border-radius: 6px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.2s;
-        }
-
-        .icon-btn:hover {
-          background: #e0e0e0;
-        }
-
-        .floating-category-btn {
-          position: fixed;
-          bottom: 2rem;
-          right: 2rem;
-          width: 60px;
-          height: 60px;
-          border-radius: 50%;
-          background: black;
-          color: white;
-          border: none;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-          transition: all 0.3s;
-          z-index: 900;
-        }
-
-        .floating-category-btn:hover {
-          transform: scale(1.1);
-          background: #333;
-        }
-
-        .category-menu-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
-
-        .category-menu-content {
-          background: white;
-          padding: 2rem;
-          border-radius: 12px;
-          max-width: 400px;
-          width: 90%;
-          max-height: 70vh;
-          overflow-y: auto;
-        }
-
-        .category-menu-content h3 {
-          margin-bottom: 1.5rem;
-          font-size: 1.25rem;
-        }
-
-        .category-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-
-        .category-item {
-          padding: 1rem;
-          border: 2px solid #e0e0e0;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.2s;
-          font-weight: 500;
-        }
-
-        .category-item:hover {
-          border-color: black;
-          background: #f9f9f9;
-        }
-
-        .category-item.active {
-          border-color: black;
-          background: black;
-          color: white;
-        }
-
         .btn-add {
-          background: black;
-          color: white;
+          background: #000;
+          color: #fff;
           border: none;
-          padding: 0.75rem 1.5rem;
-          border-radius: 6px;
+          padding: .58rem 1.05rem;
+          border-radius: 8px;
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: .35rem;
           cursor: pointer;
           font-weight: 500;
           font-family: inherit;
-          transition: background 0.2s;
+          font-size: .82rem;
+          white-space: nowrap;
+          transition: background .2s;
         }
-
         .btn-add:hover {
-          background: #333;
+          background: #222;
         }
-
-        .modal-overlay {
+        /* floating category button */
+        .fab {
           position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
-
-        .modal-content {
-          background: white;
-          padding: 2rem;
-          border-radius: 12px;
-          max-width: 500px;
-          width: 90%;
-          max-height: 90vh;
-          overflow-y: auto;
-        }
-
-        .modal-content h3 {
-          margin-bottom: 1.5rem;
-          font-size: 1.25rem;
-        }
-
-        .item-form {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .item-form input,
-        .item-form textarea,
-        .item-form select {
-          padding: 0.75rem;
-          border: 1px solid #ddd;
-          border-radius: 6px;
-          font-family: inherit;
-          font-size: 0.875rem;
-        }
-
-        .item-form textarea {
-          resize: vertical;
-          min-height: 80px;
-        }
-
-        .item-form input:focus,
-        .item-form textarea:focus,
-        .item-form select:focus {
-          outline: none;
-          border-color: #000;
-        }
-
-        .file-input-wrapper {
-          position: relative;
-          overflow: hidden;
-          display: inline-block;
-          width: 100%;
-        }
-
-        .file-input-label {
-          padding: 0.75rem;
-          border: 1px dashed #ddd;
-          border-radius: 6px;
-          background: #f9f9f9;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          font-size: 0.875rem;
-          color: #666;
-          transition: all 0.2s;
-        }
-
-        .file-input-label:hover {
-          border-color: #000;
-          background: #f0f0f0;
-        }
-
-        .file-input-label.has-file {
-          border-color: #4caf50;
-          background: #f0fdf4;
-          color: #4caf50;
-        }
-
-        .file-input-wrapper input[type="file"] {
-          position: absolute;
-          left: -9999px;
-        }
-
-        .image-preview {
-          width: 100%;
-          height: 150px;
-          object-fit: cover;
-          border-radius: 6px;
-          margin-bottom: 0.5rem;
-        }
-
-        .checkbox-label {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
-        }
-
-        .form-actions {
-          display: flex;
-          gap: 1rem;
-          margin-top: 0.5rem;
-        }
-
-        .btn-cancel,
-        .btn-submit {
-          flex: 1;
-          padding: 0.75rem;
+          bottom: 1.75rem;
+          right: 1.75rem;
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          background: #000;
+          color: #fff;
           border: none;
-          border-radius: 6px;
           cursor: pointer;
-          font-weight: 500;
-          font-family: inherit;
-          transition: all 0.2s;
-        }
-
-        .btn-cancel {
-          background: #f0f0f0;
-        }
-
-        .btn-submit {
-          background: black;
-          color: white;
-        }
-
-        .btn-cancel:hover {
-          background: #e0e0e0;
-        }
-
-        .btn-submit:hover {
-          background: #333;
-        }
-
-        .btn-submit:disabled {
-          background: #999;
-          cursor: not-allowed;
-        }
-
-        .empty-state {
-          grid-column: 1 / -1;
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
-          padding: 4rem;
-          color: #999;
+          box-shadow: 0 4px 16px rgba(0,0,0,.2);
+          z-index: 100;
+          transition: transform .2s, background .2s;
         }
-
-        .empty-state p {
-          margin-top: 1rem;
-          font-size: 1.125rem;
+        .fab:hover {
+          transform: scale(1.07);
+          background: #222;
         }
+      `}
+      </style>
 
-        @media (max-width: 768px) {
-          .items-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .content-area {
-            padding: 1rem;
-          }
-
-          .page-header {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: flex-start;
-          }
-
-          .item-card {
-            flex-direction: column;
-            align-items: flex-start;
-          }
-
-          .item-image {
-            width: 100%;
-            height: 150px;
-          }
-
-          .item-actions {
-            width: 100%;
-            justify-content: space-between;
-          }
-
-          .floating-category-btn {
-            bottom: 1rem;
-            right: 1rem;
-          }
-        }
-      `}</style>
-
-      <div className="admin-layout">
-        <AdminSidebar isOpen={sidebarOpen} />
-        <div className="main-content">
-          <AdminNavbar
-            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-            sidebarOpen={sidebarOpen}
-            currentPage="stock"
-          />
-          <div className="content-area">
-            <div className="page-header">
-              <h2>Menu Management</h2>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                {selectedCategory && (
-                  <span className="category-badge">{selectedCategory.name}</span>
-                )}
-                <button
-                  className="btn-add"
-                  onClick={() => {
-                    resetForm();
-                    setShowForm(true);
-                  }}
-                >
-                  <Plus size={20} /> Add Item
-                </button>
-              </div>
+      <div className="admin-page">
+        <AdminNavbar currentPage="stock" />
+        <div className="page-body">
+          <div className="page-header">
+            <h2>Menu Management</h2>
+            <div className="header-right">
+              {selectedCategory && (
+                <span className="cat-badge">{selectedCategory.name}</span>
+              )}
+              <button
+                className="btn-add"
+                onClick={() => {
+                  resetForm();
+                  setShowForm(true);
+                }}
+              >
+                <Plus size={15} /> Add Item
+              </button>
             </div>
+          </div>
 
-            <div className="items-grid">
-              {filteredItems.length === 0 ? (
-                <div className="empty-state">
-                  <Menu size={64} />
-                  <p>No items in this category</p>
-                </div>
-              ) : (
-                filteredItems.map((item) => (
-                  <div key={item.id} className="item-card">
+          <div className="cards-grid">
+            {filteredItems.length === 0 ? (
+              <div className="empty-state">
+                <Menu size={50} />
+                <p>No items in this category</p>
+              </div>
+            ) : (
+              filteredItems.map((item) => (
+                <div key={item.id} className="a-card">
+                  <div className="item-card-inner">
                     <img
                       src={item.image_url || "./food-img.svg"}
                       alt={item.name}
-                      className="item-image"
+                      className="item-img"
+                      onError={(e) => {
+                        e.target.src = "./food-img.svg";
+                      }}
                     />
                     <div className="item-info">
-                      <h4>{item.name}</h4>
+                      <p
+                        className={`item-name ${!item.avaliable ? "dim" : ""}`}
+                      >
+                        {item.name}
+                      </p>
                       <p className="item-price">₹{item.price}</p>
                     </div>
                     <div className="item-actions">
-                      <label className="toggle-switch">
+                      <label className="toggle-sw">
                         <input
                           type="checkbox"
-                          checked={item.avaliable}
+                          checked={!!item.avaliable}
                           onChange={() =>
-                            handleToggleAvailability(item.id, !item.avaliable)
+                            handleToggle(item.id, !item.avaliable)
                           }
                         />
-                        <span className="toggle-slider"></span>
+                        <span className="tog-track" />
                       </label>
                       <button
                         className="icon-btn"
                         onClick={() => startEdit(item)}
                       >
-                        <Edit size={18} />
+                        <Edit size={14} />
                       </button>
                       <button
-                        className="icon-btn"
+                        className="icon-btn del"
                         onClick={() => handleDelete(item.id)}
                       >
-                        <Trash2 size={18} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
-      <button
-        className="floating-category-btn"
-        onClick={() => setShowCategoryMenu(true)}
-      >
-        <Menu size={24} />
+      <button className="fab" onClick={() => setShowCategoryMenu(true)}>
+        <Menu size={19} />
       </button>
 
       {showCategoryMenu && (
-        <div className="category-menu-overlay" onClick={() => setShowCategoryMenu(false)}>
-          <div className="category-menu-content" onClick={(e) => e.stopPropagation()}>
+        <div className="overlay" onClick={() => setShowCategoryMenu(false)}>
+          <div className="cat-box" onClick={(e) => e.stopPropagation()}>
             <h3>Select Category</h3>
-            <div className="category-list">
-              {categories.map((category) => (
+            <div className="cat-list">
+              {categories.map((cat) => (
                 <div
-                  key={category.id}
-                  className={`category-item ${selectedCategory?.id === category.id ? 'active' : ''}`}
+                  key={cat.id}
+                  className={`cat-item ${selectedCategory?.id === cat.id ? "active" : ""}`}
                   onClick={() => {
-                    setSelectedCategory(category);
+                    setSelectedCategory(cat);
                     setShowCategoryMenu(false);
                   }}
                 >
-                  {category.name}
+                  {cat.name}
                 </div>
               ))}
             </div>
@@ -758,13 +673,13 @@ const ManageItems = () => {
       )}
 
       {showForm && (
-        <div className="modal-overlay" onClick={resetForm}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="overlay" onClick={resetForm}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <h3>{editingItem ? "Edit Item" : "Add New Item"}</h3>
             <form className="item-form" onSubmit={handleSubmit}>
               <input
                 type="text"
-                placeholder="Item Name"
+                placeholder="Item name *"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -773,7 +688,7 @@ const ManageItems = () => {
               />
               <input
                 type="number"
-                placeholder="Price"
+                placeholder="Price (₹) *"
                 value={formData.price}
                 onChange={(e) =>
                   setFormData({ ...formData, price: e.target.value })
@@ -796,51 +711,36 @@ const ManageItems = () => {
                 }
                 required
               >
-                <option value="">Select Category</option>
+                <option value="">Select a category *</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
                   </option>
                 ))}
               </select>
-
-              <div className="file-input-wrapper">
+              <div>
                 <label
-                  htmlFor="image-upload"
-                  className={`file-input-label ${imageFile || formData.image_url ? "has-file" : ""}`}
+                  htmlFor="img-up"
+                  className={`file-lbl ${imageFile || formData.image_url ? "got-file" : ""}`}
                 >
                   {imageFile
-                    ? `Selected: ${imageFile.name}`
+                    ? `📷 ${imageFile.name}`
                     : formData.image_url
-                    ? "Image uploaded - Click to change"
-                    : "📷 Choose Image"}
+                      ? "📷 Image saved — click to change"
+                      : "📷 Choose image (optional)"}
                 </label>
                 <input
-                  id="image-upload"
+                  id="img-up"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setImageFile(file);
-                    }
-                  }}
+                  onChange={handleImageChange}
+                  style={{ display: "none" }}
                 />
               </div>
-
-              {(imageFile || formData.image_url) && (
-                <img
-                  src={
-                    imageFile
-                      ? URL.createObjectURL(imageFile)
-                      : formData.image_url
-                  }
-                  alt="Preview"
-                  className="image-preview"
-                />
+              {imagePreviewUrl && (
+                <img src={imagePreviewUrl} alt="Preview" className="img-prev" />
               )}
-
-              <label className="checkbox-label">
+              <label className="chk-lbl">
                 <input
                   type="checkbox"
                   checked={formData.avaliable}
@@ -848,18 +748,18 @@ const ManageItems = () => {
                     setFormData({ ...formData, avaliable: e.target.checked })
                   }
                 />
-                Available in Stock
+                Available in stock
               </label>
               <div className="form-actions">
-                <button type="button" onClick={resetForm} className="btn-cancel">
+                <button type="button" className="btn-c" onClick={resetForm}>
                   Cancel
                 </button>
-                <button type="submit" className="btn-submit" disabled={uploading}>
+                <button type="submit" className="btn-k" disabled={uploading}>
                   {uploading
-                    ? "Uploading..."
+                    ? "Saving…"
                     : editingItem
-                    ? "Update Item"
-                    : "Add Item"}
+                      ? "Update Item"
+                      : "Add Item"}
                 </button>
               </div>
             </form>

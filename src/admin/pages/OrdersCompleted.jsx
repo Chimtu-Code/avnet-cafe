@@ -1,12 +1,196 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../services/supabaseClient";
 import AdminNavbar from "../components/AdminNavbar";
-import AdminSidebar from "../components/AdminSidebar";
+
+const SHARED = `
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  .admin-page {
+    display: flex;
+    flex-direction: column;
+    width:100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #f5f5f5;
+    font-family: 'Poppins', sans-serif;
+  }
+  .page-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.75rem 2rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .page-heading {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 1.5rem;
+  }
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.25rem;
+    width: 100%;
+  }
+  .empty-state {
+    grid-column: 1/-1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 2rem;
+    color: #ccc;
+    gap: .75rem;
+  }
+  .empty-state p {
+    color: #aaa;
+    font-size: .92rem;
+  }
+  .a-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 5px rgba(0,0,0,.08);
+    overflow: hidden;
+    transition: box-shadow .2s;
+  }
+  .a-card:hover {
+    box-shadow: 0 4px 18px rgba(0,0,0,.13);
+  }
+  .card-top {
+    background: #000;
+    color: #fff;
+    padding: .65rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .5rem;
+    font-size: .78rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .card-top span {
+    flex: 1;
+  }
+  .check-badge {
+    width: 22px;
+    height: 22px;
+    background: #4caf50;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .token-block {
+    padding: 1rem;
+    border-bottom: 2px dotted #4caf50;
+  }
+  .token-label {
+    font-size: .72rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: .35rem;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+  }
+  .token-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .token-num {
+    font-family: sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #000;
+    line-height: 1;
+  }
+  .token-meta {
+    font-size: .74rem;
+    color: #555;
+    text-align: right;
+    line-height: 1.75;
+  }
+  .bill-block {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+  .bill-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .1rem;
+  }
+  .bill-head p {
+    font-weight: 600;
+    font-size: .875rem;
+  }
+  .expand-btn {
+    border: none;
+    background: none;
+    color: #888;
+    font-size: .7rem;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+  }
+  .bill-items {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+    margin: .2rem 0;
+  }
+  .bill-item {
+    display: flex;
+    justify-content: space-between;
+    padding: .42rem .6rem;
+    border-radius: 6px;
+    background: #f7f7f7;
+    font-size: .8rem;
+  }
+  .bill-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: .82rem;
+    color: #555;
+  }
+  .bill-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: .9rem;
+    font-weight: 700;
+    color: #000;
+    padding-top: .25rem;
+  }
+  .bill-sep {
+    border: none;
+    border-top: 1px solid #ebebeb;
+    margin: .3rem 0;
+  }
+  @media (max-width: 768px) {
+    .page-body {
+      padding: 1rem;
+    }
+    .cards-grid {
+      grid-template-columns: 1fr;
+    }
+    .token-num {
+      font-size: 1.9rem;
+    }
+  }
+`;
 
 const OrdersCompleted = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [orders, setOrders] = useState([]);
-  const [expandedOrders, setExpandedOrders] = useState({});
+  const [expanded, setExpanded] = useState({});
 
   useEffect(() => {
     fetchOrders();
@@ -18,317 +202,96 @@ const OrdersCompleted = () => {
       .select("*")
       .eq("status", "completed")
       .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setOrders(data);
-    }
-  };
-
-  const toggleDetails = (orderId) => {
-    setExpandedOrders((prev) => ({
-      ...prev,
-      [orderId]: !prev[orderId],
-    }));
+    if (!error && data) setOrders(data);
   };
 
   return (
     <>
-      <style>{`
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-
-        .admin-layout {
-          display: flex;
-          min-height: 100vh;
-          background: #f5f5f5;
-          font-family: 'Poppins', sans-serif;
-        }
-
-        .main-content {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          min-width: 0;
-        }
-
-        .content-area {
-          flex: 1;
-          padding: 2rem;
-          overflow-y: auto;
-          width: 100%;
-        }
-
-        .history-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 1.5rem;
-          max-width: 1400px;
-        }
-
-        .history-card {
-          background: white;
-          border-radius: 10px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          overflow: hidden;
-        }
-
-        .history-header {
-          background: black;
-          color: white;
-          padding: 0.5rem 0.8rem;
-          font-size: 0.875rem;
-          font-weight: 500;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          font-family: Poppins;
-        }
-
-        .check-icon {
-          width: 24px;
-          height: 24px;
-          background: #4caf50;
-          border-radius: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 16px;
-          font-weight: bold;
-        }
-
-        .history-body {
-          padding: 1rem 0.8rem;
-        }
-
-        .history-token-section {
-          padding-bottom: 1rem;
-          border-bottom: 2px dotted #4caf50;
-          margin-bottom: 1rem;
-        }
-
-        .history-token-label {
-          font-family: Poppins;
-          font-size: 1rem;
-          font-weight: 600;
-          margin-bottom: 0.5rem;
-        }
-
-        .history-token-info {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .history-token {
-          font-size: 2.5rem;
-          font-weight: 800;
-          font-family: sans-serif;
-          color: #000;
-        }
-
-        .history-datetime {
-          font-size: 1rem;
-          color: #000;
-          font-family: Poppins;
-          text-align: right;
-          line-height: 1.4;
-        }
-
-        .history-items-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 0.5rem;
-        }
-
-        .history-items-header p {
-          font-weight: 500;
-          font-family: Poppins;
-          font-size: 1rem;
-        }
-
-        .details-btn {
-          border: none;
-          background: none;
-          color: #78787a;
-          font-size: 0.625rem;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 0.2rem;
-          font-family: Roboto;
-        }
-
-        .history-items-list {
-          display: flex;
-          flex-direction: column;
-          gap: 0.4rem;
-          margin: 0.5rem 0;
-        }
-
-        .history-item {
-          display: flex;
-          justify-content: space-between;
-          padding: 0.5rem;
-          background: #f7f7f7;
-          border-radius: 0.625rem;
-          font-size: 0.875rem;
-        }
-
-        .history-item-row {
-          display: flex;
-          justify-content: space-between;
-          font-size: 0.875rem;
-          color: #282828;
-          font-family: Roboto;
-          margin: 0.25rem 0;
-        }
-
-        .history-total {
-          display: flex;
-          justify-content: space-between;
-          font-size: 1rem;
-          font-weight: 700;
-          color: #282828;
-          font-family: Roboto;
-          margin-top: 0.5rem;
-          padding-top: 0.5rem;
-        }
-
-        .check-icon {
-          width: 20px;
-          height: 20px;
-          background: #4caf50;
-          border-radius: 4px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 14px;
-        }
-
-        hr {
-          border: none;
-          border-top: 1px solid #e0e0e0;
-          margin: 0.5rem 0;
-        }
-
-        @media (max-width: 768px) {
-          .history-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .content-area {
-            padding: 1rem;
-          }
-
-          .history-token {
-            font-size: 2rem;
-          }
-
-          .history-token-info {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.5rem;
-          }
-
-          .history-datetime {
-            text-align: left;
-          }
-        }
-      `}</style>
-
-      <div className="admin-layout">
-        <AdminSidebar isOpen={sidebarOpen} />
-        <div className="main-content">
-          <AdminNavbar
-            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-            sidebarOpen={sidebarOpen}
-            currentPage="history"
-          />
-          <div className="content-area">
-            <div className="history-grid">
-              {orders.map((order) => {
-                const createdAt = new Date(order.created_at);
+      <style>{SHARED}</style>
+      <div className="admin-page">
+        <AdminNavbar currentPage="history" />
+        <div className="page-body">
+          <div className="cards-grid">
+            {orders.length === 0 ? (
+              <div className="empty-state">
+                <p>No completed orders yet</p>
+              </div>
+            ) : (
+              orders.map((order) => {
+                const t = new Date(order.created_at);
                 const gst = Math.round(order.total_price * 0.05);
-                const basePrice = order.total_price - gst;
-                const showDetails = expandedOrders[order.id];
-
+                const base = order.total_price - gst;
                 return (
-                  <div key={order.id} className="history-card">
-                    <div className="history-header">
+                  <div key={order.id} className="a-card">
+                    <div className="card-top">
                       <span>
-                        {(order.name || "USER").toUpperCase()} ORDER COMFORMED
+                        {(order.name || "USER").toUpperCase()} ORDER CONFIRMED
                       </span>
-                      <div className="check-icon">✓</div>
+                      <div className="check-badge">✓</div>
                     </div>
-                    <div className="history-body">
-                      <div className="history-token-section">
-                        <div className="history-token-label">Order Number</div>
-                        <div className="history-token-info">
-                          <div className="history-token">#{order.token_number}</div>
-                          <div className="history-datetime">
-                            <p>{createdAt.toLocaleDateString()}</p>
-                            <p>
-                              {createdAt.toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </p>
-                            <p>Call: {order.phone}</p>
-                          </div>
+                    <div className="token-block">
+                      <p className="token-label">Order Number</p>
+                      <div className="token-row">
+                        <p className="token-num">#{order.token_number}</p>
+                        <div className="token-meta">
+                          <p>{t.toLocaleDateString()}</p>
+                          <p>
+                            {t.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                          <p>📞 {order.phone}</p>
                         </div>
                       </div>
-
-                      <div className="history-items-header">
+                    </div>
+                    <div className="bill-block">
+                      <div className="bill-head">
                         <p>Bill Details</p>
                         <button
-                          className="details-btn"
-                          onClick={() => toggleDetails(order.id)}
+                          className="expand-btn"
+                          onClick={() =>
+                            setExpanded((p) => ({
+                              ...p,
+                              [order.id]: !p[order.id],
+                            }))
+                          }
                         >
-                          Item Details <img src="/down-arrow.svg" alt=">" />
+                          Item Details ▾
                         </button>
                       </div>
-
-                      {showDetails && (
-                        <>
-                          <div className="history-items-list">
-                            <hr />
-                            {order.items?.map((item, idx) => (
-                              <div className="history-item" key={idx}>
-                                <span>
-                                  {item.name} x {item.quantity}
-                                </span>
-                                <span>₹{item.price * item.quantity}</span>
-                              </div>
-                            ))}
-                            <hr />
-                          </div>
-                        </>
+                      {expanded[order.id] && (
+                        <div className="bill-items">
+                          <hr className="bill-sep" />
+                          {order.items?.map((item, i) => (
+                            <div key={i} className="bill-item">
+                              <span>
+                                {item.name} × {item.quantity}
+                              </span>
+                              <span>₹{item.price * item.quantity}</span>
+                            </div>
+                          ))}
+                          <hr className="bill-sep" />
+                        </div>
                       )}
-
-                      <div className="history-item-row">
+                      <div className="bill-row">
                         <span>Item Total</span>
-                        <span>₹{basePrice}</span>
+                        <span>₹{base}</span>
                       </div>
-                      <div className="history-item-row">
-                        <span>GST & Other Charges (5%)</span>
+                      <div className="bill-row">
+                        <span>GST (5%)</span>
                         <span>₹{gst}</span>
                       </div>
-                      <hr />
-                      <div className="history-total">
+                      <hr className="bill-sep" />
+                      <div className="bill-total">
                         <span>TOTAL BILL</span>
                         <span>₹{order.total_price}</span>
                       </div>
                     </div>
                   </div>
                 );
-              })}
-            </div>
+              })
+            )}
           </div>
         </div>
       </div>

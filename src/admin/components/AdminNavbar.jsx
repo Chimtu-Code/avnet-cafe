@@ -2,13 +2,17 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../../services/supabaseClient";
 import { broadcastStatusUpdate } from "../utils/BroadCastHelper";
-import { ShoppingBag, Clock, Package, TrendingUp } from "lucide-react";
+import { ShoppingBag, Clock, Package, TrendingUp, MessageSquare } from "lucide-react";
 
 const AdminNavbar = ({ currentPage }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [closedMessage, setClosedMessage] = useState("");
+  const [tempMessage, setTempMessage] = useState("");
+  const [savingMessage, setSavingMessage] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -36,10 +40,13 @@ const AdminNavbar = ({ currentPage }) => {
   const fetchStatus = async () => {
     const { data, error } = await supabase
       .from("restaurant_settings")
-      .select("is_open")
+      .select("is_open, closed_message")
       .eq("id", 1)
       .single();
-    if (!error && data) setIsOpen(data.is_open);
+    if (!error && data) {
+      setIsOpen(data.is_open);
+      setClosedMessage(data.closed_message || "We're currently closed. Please check back during our operating hours. Thank you!");
+    }
     setLoading(false);
   };
 
@@ -52,6 +59,37 @@ const AdminNavbar = ({ currentPage }) => {
       .eq("id", 1);
     if (!error) await broadcastStatusUpdate();
     if (error) setIsOpen(!newStatus);
+  };
+
+  const openMessageModal = () => {
+    setTempMessage(closedMessage);
+    setShowMessageModal(true);
+  };
+
+  const saveClosedMessage = async () => {
+    if (!tempMessage.trim()) {
+      alert("Please enter a message");
+      return;
+    }
+    
+    setSavingMessage(true);
+    const { error } = await supabase
+      .from("restaurant_settings")
+      .update({ closed_message: tempMessage.trim() })
+      .eq("id", 1);
+    
+    if (!error) {
+      setClosedMessage(tempMessage.trim());
+      await broadcastStatusUpdate();
+      setShowMessageModal(false);
+    } else {
+      alert("Failed to save message");
+    }
+    setSavingMessage(false);
+  };
+
+  const resetToDefault = () => {
+    setTempMessage("We're currently closed. Please check back during our operating hours. Thank you!");
   };
 
   return (
@@ -95,7 +133,7 @@ const AdminNavbar = ({ currentPage }) => {
           margin-left: 6px;
         }
 
-        /* ── Open/closed toggle ── */
+        /* ── Open/closed toggle + message button ── */
         .status-group {
           display: flex;
           align-items: center;
@@ -106,7 +144,6 @@ const AdminNavbar = ({ currentPage }) => {
           font-size: 0.8rem;
           font-weight: 700;
           letter-spacing: 0.5px;
-          color: ${({ isOpen }) => isOpen ? '#16a34a' : '#dc2626'};
         }
 
         .status-label.open  { color: #16a34a; }
@@ -143,6 +180,28 @@ const AdminNavbar = ({ currentPage }) => {
         .toggle-pill input:checked ~ .toggle-track { background: #16a34a; }
         .toggle-pill input:checked ~ .toggle-thumb { transform: translateX(22px); }
         .toggle-pill input:disabled ~ .toggle-track { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── Message button ── */
+        .msg-btn {
+          background: #f0f0f0;
+          border: none;
+          padding: 0.45rem 0.65rem;
+          border-radius: 6px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: #555;
+          transition: all 0.2s;
+          flex-shrink: 0;
+        }
+
+        .msg-btn:hover {
+          background: #e0e0e0;
+          color: #000;
+        }
 
         /* ── Time display ── */
         .navbar-time {
@@ -239,13 +298,128 @@ const AdminNavbar = ({ currentPage }) => {
           border-left-color: #000;
         }
 
+        /* ── Message Modal ── */
+        .msg-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 1rem;
+        }
+
+        .msg-modal {
+          background: #fff;
+          border-radius: 12px;
+          padding: 1.75rem;
+          width: 100%;
+          max-width: 500px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .msg-modal h3 {
+          font-size: 1.1rem;
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+          color: #000;
+        }
+
+        .msg-modal p {
+          font-size: 0.85rem;
+          color: #666;
+          margin-bottom: 1.25rem;
+        }
+
+        .msg-textarea {
+          width: 100%;
+          min-height: 100px;
+          padding: 0.75rem;
+          border: 1.5px solid #e5e5e5;
+          border-radius: 8px;
+          font-family: inherit;
+          font-size: 0.875rem;
+          resize: vertical;
+          transition: border-color 0.2s;
+          margin-bottom: 1rem;
+        }
+
+        .msg-textarea:focus {
+          outline: none;
+          border-color: #000;
+        }
+
+        .msg-actions {
+          display: flex;
+          gap: 0.65rem;
+          align-items: center;
+        }
+
+        .msg-btn-secondary {
+          padding: 0.65rem 1rem;
+          border: 1px solid #ddd;
+          background: #fff;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.85rem;
+          font-weight: 500;
+          font-family: inherit;
+          transition: all 0.2s;
+          color: #666;
+        }
+
+        .msg-btn-secondary:hover {
+          background: #f5f5f5;
+          border-color: #999;
+        }
+
+        .msg-btn-primary {
+          flex: 1;
+          padding: 0.65rem 1rem;
+          border: none;
+          background: #000;
+          color: #fff;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.85rem;
+          font-weight: 600;
+          font-family: inherit;
+          transition: background 0.2s;
+        }
+
+        .msg-btn-primary:hover {
+          background: #222;
+        }
+
+        .msg-btn-primary:disabled {
+          background: #999;
+          cursor: not-allowed;
+        }
+
+        .msg-btn-cancel {
+          padding: 0.65rem 1rem;
+          border: none;
+          background: #f0f0f0;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 0.85rem;
+          font-weight: 500;
+          font-family: inherit;
+          transition: background 0.2s;
+        }
+
+        .msg-btn-cancel:hover {
+          background: #e0e0e0;
+        }
+
         /* ── Responsive ── */
         @media (max-width: 768px) {
           .navbar-top { padding: 0 1rem; }
-          .navbar-tabs { display: none; }             /* hide desktop tabs */
+          .navbar-tabs { display: none; }
           .mobile-menu-btn { display: flex; }
-          .navbar-time { display: none; }             /* save space on mobile */
-
+          .navbar-time { display: none; }
+          .msg-btn span { display: none; } /* Hide text on mobile */
           .mobile-nav-dropdown.open { display: flex; }
         }
 
@@ -261,7 +435,7 @@ const AdminNavbar = ({ currentPage }) => {
             Avneet Caafe <span>Admin</span>
           </div>
 
-          {/* Open/Closed toggle */}
+          {/* Open/Closed toggle + Message button */}
           <div className="status-group">
             <span className={`status-label ${isOpen ? "open" : "closed"}`}>
               {isOpen ? "OPEN" : "CLOSED"}
@@ -276,6 +450,14 @@ const AdminNavbar = ({ currentPage }) => {
               <span className="toggle-track" />
               <span className="toggle-thumb" />
             </label>
+            <button
+              className="msg-btn"
+              onClick={openMessageModal}
+              title="Edit closed message"
+            >
+              <MessageSquare size={14} />
+              <span>Message</span>
+            </button>
           </div>
 
           {/* Time — hidden on mobile */}
@@ -292,12 +474,10 @@ const AdminNavbar = ({ currentPage }) => {
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? (
-              /* X icon */
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
               </svg>
             ) : (
-              /* Hamburger */
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
               </svg>
@@ -333,6 +513,49 @@ const AdminNavbar = ({ currentPage }) => {
           ))}
         </div>
       </nav>
+
+      {/* ── Closed Message Modal ── */}
+      {showMessageModal && (
+        <div className="msg-overlay" onClick={() => setShowMessageModal(false)}>
+          <div className="msg-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Closed Message</h3>
+            <p>This message will be displayed to customers when the restaurant is closed.</p>
+            
+            <textarea
+              className="msg-textarea"
+              value={tempMessage}
+              onChange={(e) => setTempMessage(e.target.value)}
+              placeholder="Enter your closed message..."
+              maxLength={200}
+            />
+            
+            <div className="msg-actions">
+              <button
+                className="msg-btn-secondary"
+                onClick={resetToDefault}
+                type="button"
+              >
+                Reset
+              </button>
+              <button
+                className="msg-btn-cancel"
+                onClick={() => setShowMessageModal(false)}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="msg-btn-primary"
+                onClick={saveClosedMessage}
+                disabled={savingMessage}
+                type="button"
+              >
+                {savingMessage ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

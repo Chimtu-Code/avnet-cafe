@@ -16,23 +16,35 @@ const Home = () => {
   const { getTotalItems } = useCart();
   const [showMenu, setShowMenu] = useState(false);
   const [restaurantOpen, setRestaurantOpen] = useState(true);
+  const [closedMessage, setClosedMessage] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const pollingIntervalRef = useRef(null);
   const channelRef = useRef(null);
+  const statusChannelRef = useRef(null);
 
   useEffect(() => {
     // Initial fetch
     fetchMenuData();
     checkRestaurantStatus();
 
-    // Set up Supabase Broadcast Channel for real-time updates
+    // Set up Supabase Broadcast Channel for menu updates
     channelRef.current = supabase
       .channel('menu-updates')
       .on('broadcast', { event: 'menu-changed' }, () => {
         console.log('Menu update broadcast received');
         fetchMenuDataSilently();
       })
+      .subscribe();
+
+    // Set up channel for restaurant status updates
+    statusChannelRef.current = supabase
+      .channel("restaurant-status")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "restaurant_settings" },
+        checkRestaurantStatus
+      )
       .on('broadcast', { event: 'status-changed' }, () => {
         console.log('Status update broadcast received');
         checkRestaurantStatus();
@@ -62,6 +74,9 @@ const Home = () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }
+      if (statusChannelRef.current) {
+        supabase.removeChannel(statusChannelRef.current);
+      }
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
@@ -70,12 +85,16 @@ const Home = () => {
     try {
       const { data } = await supabase
         .from("restaurant_settings")
-        .select("is_open")
+        .select("is_open, closed_message")
         .eq("id", 1)
         .single();
 
       if (data) {
         setRestaurantOpen(data.is_open);
+        setClosedMessage(
+          data.closed_message || 
+          "We're currently closed. Please check back during our operating hours. Thank you!"
+        );
       }
     } catch (error) {
       console.error("Error checking restaurant status:", error);
@@ -287,7 +306,7 @@ const Home = () => {
           border-radius: 50%;
           width: 50px;
           height: 50px;
-          display: flex;
+          display: none; /* HIDDEN */
           align-items: center;
           justify-content: center;
           cursor: pointer;
@@ -331,6 +350,7 @@ const Home = () => {
           color: #666;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           font-family: 'Poppins', sans-serif;
+          display: none; /* HIDDEN */
         }
 
         @media (max-width: 768px) {
@@ -366,7 +386,7 @@ const Home = () => {
         }
       `}</style>
 
-      {/* Manual Refresh Button */}
+      {/* Manual Refresh Button - HIDDEN */}
       <button 
         className={`refresh-button ${isRefreshing ? 'refreshing' : ''}`}
         onClick={handleManualRefresh}
@@ -378,7 +398,7 @@ const Home = () => {
         </svg>
       </button>
 
-      {/* Last Updated Indicator */}
+      {/* Last Updated - HIDDEN */}
       <div className="last-updated">
         Updated {lastUpdated.toLocaleTimeString()}
       </div>
@@ -390,7 +410,7 @@ const Home = () => {
             <p className="closed-subtext">Sorry, We're Closed</p>
           </div>
           <p className="closed-message">
-            We're currently closed. Please check back during our operating hours. Thank you!
+            {closedMessage}
           </p>
         </div>
       )}

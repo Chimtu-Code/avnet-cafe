@@ -30,11 +30,39 @@ const Home = () => {
 
     // Set up Supabase Broadcast Channel for menu updates
     channelRef.current = supabase
-      .channel('menu-updates')
-      .on('broadcast', { event: 'menu-changed' }, () => {
-        console.log('Menu update broadcast received');
-        fetchMenuDataSilently();
-      })
+      .channel("menu-realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "items" },
+        (payload) => {
+          setItems((prev) => {
+            // Item toggled unavailable — remove it from menu
+            if (!payload.new.avaliable)
+              return prev.filter((i) => i.id !== payload.new.id);
+            // Item toggled available — add it back if not already present
+            const exists = prev.find((i) => i.id === payload.new.id);
+            if (exists)
+              return prev.map((i) =>
+                i.id === payload.new.id ? payload.new : i,
+              );
+            return [...prev, payload.new];
+          });
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "items" },
+        (payload) => {
+          if (payload.new.avaliable) setItems((prev) => [...prev, payload.new]);
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "items" },
+        (payload) => {
+          setItems((prev) => prev.filter((i) => i.id !== payload.old.id));
+        },
+      )
       .subscribe();
 
     // Set up channel for restaurant status updates
@@ -43,10 +71,10 @@ const Home = () => {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "restaurant_settings" },
-        checkRestaurantStatus
+        checkRestaurantStatus,
       )
-      .on('broadcast', { event: 'status-changed' }, () => {
-        console.log('Status update broadcast received');
+      .on("broadcast", { event: "status-changed" }, () => {
+        console.log("Status update broadcast received");
         checkRestaurantStatus();
       })
       .subscribe();
@@ -64,7 +92,7 @@ const Home = () => {
         checkRestaurantStatus();
       }
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Cleanup
     return () => {
@@ -77,7 +105,7 @@ const Home = () => {
       if (statusChannelRef.current) {
         supabase.removeChannel(statusChannelRef.current);
       }
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -92,8 +120,8 @@ const Home = () => {
       if (data) {
         setRestaurantOpen(data.is_open);
         setClosedMessage(
-          data.closed_message || 
-          "We're currently closed. Please check back during our operating hours. Thank you!"
+          data.closed_message ||
+            "We're currently closed. Please check back during our operating hours. Thank you!",
         );
       }
     } catch (error) {
@@ -108,7 +136,7 @@ const Home = () => {
       const { data: categoryData, error: categoryError } = await supabase
         .from("categories")
         .select("*")
-        .order('id', { ascending: true });
+        .order("id", { ascending: true });
 
       if (categoryError) throw categoryError;
 
@@ -116,7 +144,7 @@ const Home = () => {
         .from("items")
         .select("*")
         .is("avaliable", true)
-        .order('id', { ascending: true });
+        .order("id", { ascending: true });
 
       if (itemError) throw itemError;
 
@@ -136,7 +164,7 @@ const Home = () => {
       const { data: categoryData, error: categoryError } = await supabase
         .from("categories")
         .select("*")
-        .order('id', { ascending: true });
+        .order("id", { ascending: true });
 
       if (categoryError) throw categoryError;
 
@@ -144,21 +172,22 @@ const Home = () => {
         .from("items")
         .select("*")
         .is("avaliable", true)
-        .order('id', { ascending: true });
+        .order("id", { ascending: true });
 
       if (itemError) throw itemError;
 
       // Only update if data has actually changed
       setCategories((prev) => {
-        const hasChanged = JSON.stringify(prev) !== JSON.stringify(categoryData);
-        return hasChanged ? (categoryData || []) : prev;
+        const hasChanged =
+          JSON.stringify(prev) !== JSON.stringify(categoryData);
+        return hasChanged ? categoryData || [] : prev;
       });
 
       setItems((prev) => {
         const hasChanged = JSON.stringify(prev) !== JSON.stringify(itemData);
-        return hasChanged ? (itemData || []) : prev;
+        return hasChanged ? itemData || [] : prev;
       });
-      
+
       setLastUpdated(new Date());
     } catch (error) {
       console.error("Error polling menu data:", error.message);
@@ -186,7 +215,7 @@ const Home = () => {
 
   const categoriesWithCounts = categories.map((category) => {
     const itemCount = items.filter(
-      (item) => item.category_id === category.id
+      (item) => item.category_id === category.id,
     ).length;
     return { ...category, itemCount };
   });
@@ -387,14 +416,24 @@ const Home = () => {
       `}</style>
 
       {/* Manual Refresh Button - HIDDEN */}
-      <button 
-        className={`refresh-button ${isRefreshing ? 'refreshing' : ''}`}
+      <button
+        className={`refresh-button ${isRefreshing ? "refreshing" : ""}`}
         onClick={handleManualRefresh}
         disabled={isRefreshing}
         title="Refresh menu"
       >
-        <svg className="refresh-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        <svg
+          className="refresh-icon"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+          />
         </svg>
       </button>
 
@@ -409,9 +448,7 @@ const Home = () => {
             <p className="closed-text">CLOSED</p>
             <p className="closed-subtext">Sorry, We're Closed</p>
           </div>
-          <p className="closed-message">
-            {closedMessage}
-          </p>
+          <p className="closed-message">{closedMessage}</p>
         </div>
       )}
 

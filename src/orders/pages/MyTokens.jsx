@@ -8,24 +8,49 @@ const MyTokens = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const userPhone = localStorage.getItem("userPhone");
+  // Support both old key (single string) and new key (array)
+  const stored = localStorage.getItem("userPhones");
+  const legacy = localStorage.getItem("userPhone");
+
+  const userPhones = stored ? JSON.parse(stored) : legacy ? [legacy] : [];
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      if (!userPhone) return;
+    if (!userPhones.length) {
+      setLoading(false);
+      return;
+    }
 
+    const fetchOrders = async () => {
       const { data, error } = await supabase
         .from("orders")
         .select("*")
-        .eq("phone", userPhone)
+        .in("phone", userPhones)
         .order("created_at", { ascending: false });
-
       if (!error) setOrders(data);
       setLoading(false);
     };
 
     fetchOrders();
-  }, [userPhone]);
+
+    // Listen for status changes on this user's orders only
+    const channel = supabase
+      .channel("my-orders-realtime")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders" },
+        (payload) => {
+          // Only update if it's one of this user's orders
+          const isMyOrder = userPhones.includes(payload.new.phone);
+          if (!isMyOrder) return;
+          setOrders((prev) =>
+            prev.map((o) => (o.id === payload.new.id ? payload.new : o)),
+          );
+        },
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, []);
 
   return (
     <div className="user-tokens">
@@ -37,7 +62,12 @@ const MyTokens = () => {
       </div>
       <div className="user-tokens-list">
         {loading ? (
-          <DotLottieReact src="./loader-food-animation.lottie" loop autoplay className="loader-animation"/>
+          <DotLottieReact
+            src="./loader-food-animation.lottie"
+            loop
+            autoplay
+            className="loader-animation"
+          />
         ) : orders.length > 0 ? (
           orders.map((order) => <TokenCard key={order.id} order={order} />)
         ) : (

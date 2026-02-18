@@ -50,7 +50,9 @@ const CheckoutPage = () => {
     setLoading(false);
 
     if (!error) {
-      localStorage.setItem("userPhone", form.phone);
+      const existing = JSON.parse(localStorage.getItem("userPhones") || "[]");
+      if (!existing.includes(form.phone)) existing.push(form.phone);
+      localStorage.setItem("userPhones", JSON.stringify(existing));
       console.log("Inserting successful navigating to the /my-tokens page");
       setCartItems([]); // Clear cart
       navigate("/my-tokens"); // Redirect to token status page

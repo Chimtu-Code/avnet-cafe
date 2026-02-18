@@ -302,8 +302,23 @@ const OrdersPending = () => {
       .channel("pending-rt")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "orders" },
-        fetchOrders,
+        { event: "INSERT", schema: "public", table: "orders" },
+        (payload) => {
+          // New order arrives — add it to top of list if pending
+          if (payload.new.status === "pending") {
+            setOrders((prev) => [payload.new, ...prev]);
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "orders" },
+        (payload) => {
+          // Order marked complete — remove it from pending list
+          if (payload.new.status === "completed") {
+            setOrders((prev) => prev.filter((o) => o.id !== payload.new.id));
+          }
+        },
       )
       .subscribe();
     return () => supabase.removeChannel(ch);

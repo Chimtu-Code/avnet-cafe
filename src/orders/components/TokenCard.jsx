@@ -1,4 +1,4 @@
-import {React,useState} from "react";
+import { React, useState, useEffect } from "react";
 import "./TokenCard.css";
 
 const TokenCard = ({ order }) => {
@@ -6,14 +6,58 @@ const TokenCard = ({ order }) => {
   const gst = Math.round(order.total_price * 0.05);
   const basePrice = order.total_price - gst;
   const [showDetails, setShowDetails] = useState(false);
+  const [showPopup, setShowPopup] = useState(order.status === "completed");
+
+  useEffect(() => {
+    if (order.status === "completed") {
+      setShowPopup(true);
+      const t = setTimeout(() => setShowPopup(false), 10000);
+      return () => clearTimeout(t);
+    }
+  }, [order.status]);
 
   return (
     <div className="user-token">
+      {showPopup && (
+        <div
+          style={{
+            background: "#4caf50",
+            color: "#fff",
+            padding: "0.6rem 1rem",
+            fontSize: "0.82rem",
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "0.5rem",
+          }}
+        >
+          <span>🎉 Your order is ready for pickup!</span>
+          <button
+            onClick={() => setShowPopup(false)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#fff",
+              cursor: "pointer",
+              fontSize: "1rem",
+              lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
       <p className="user-name">
-        {order.name || "user"} YOUR ORDER RECEIVED{" "}
+        {order.name || "user"}{" "}
+        {order.status === "completed" ? "ORDER READY" : "YOUR ORDER RECEIVED"}
         <img
-          src="./pending-order.svg"
-          alt="pending"
+          src={
+            order.status === "completed"
+              ? "./completed-order.png"
+              : "./pending-order.svg"
+          }
+          alt={order.status}
           className="status-indicator"
         />
       </p>

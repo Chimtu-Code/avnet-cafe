@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../../../shared/services/supabaseClient";
-import { broadcastStatusUpdate } from "../utils/BroadCastHelper";
+import { broadcastStatusUpdate } from "../utils/BroadcastHelper";
 import { ShoppingBag, Clock, Package, TrendingUp, MessageSquare } from "lucide-react";
 
 const AdminNavbar = ({ currentPage }) => {

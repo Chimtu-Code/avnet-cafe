@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Edit, Trash2, Menu } from "lucide-react";
 import AdminNavbar from "../components/AdminNavbar";
-import { broadcastMenuUpdate } from "../utils/BroadCastHelper";
+import { broadcastMenuUpdate } from "../utils/BroadcastHelper";
 import { supabase } from "../../../shared/services/supabaseClient";
 import { uploadToCloudinary } from "../../../shared/utils/uploadToCloudinary";
 import "../styles/ManageItems.css";

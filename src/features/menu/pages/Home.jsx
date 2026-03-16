@@ -1,28 +1,23 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import Navbar from '../../../shared/components/Navbar';
-import SideBar from '../../../shared/components/SideBar';
-import MenuCategory from '../components/MenuCategory';
-import { useMenuData } from '../hooks/useMenuData';
-import { useCartData } from '../../cart/context/CartContext';
-import { useSideBar } from '../../../shared/context/SideBarContext';
-import '../styles/Home.css';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import Navbar from "../../../shared/components/NavBar";
+import SideBar from "../../../shared/components/SideBar";
+import MenuCategory from "../components/MenuCategory";
+import { useMenuData } from "../hooks/useMenuData";
+import { useCartData } from "../../cart/context/CartContext";
+import { useSideBar } from "../../../shared/context/SideBarContext";
+import "../styles/Home.css";
 
 // RestaurantContext handles the closed overlay globally — Home only owns the menu.
 
 const Home = () => {
   const { showSideBar } = useSideBar();
-  const {
-    categories,
-    setCategories,
-    items,
-    loading,
-    categoriesWithCounts,
-  } = useMenuData();
+  const { categories, setCategories, items, loading, categoriesWithCounts } =
+    useMenuData();
 
   const { totalItems } = useCartData();
-  const [showMenu, setShowMenu]       = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [showMenu, setShowMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleCategoryClick = (categoryId) => {
     setCategories((prev) => {
@@ -33,15 +28,19 @@ const Home = () => {
       return [selected, ...next];
     });
     setShowMenu(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const filteredItems = searchQuery.trim()
-    ? items.filter((i) => i.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? items.filter((i) =>
+        i.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
     : items;
 
   const visibleCategories = searchQuery.trim()
-    ? categories.filter((c) => filteredItems.some((i) => i.category_id === c.id))
+    ? categories.filter((c) =>
+        filteredItems.some((i) => i.category_id === c.id),
+      )
     : categories;
 
   if (loading) {

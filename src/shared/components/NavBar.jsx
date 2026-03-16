@@ -9,7 +9,7 @@ const Navbar = () => {
     <div className="nav-bar">
       <div className="nav-logo-n-msg">
         <img src="./cafe-logo.svg" alt=":)" className="nav-logo" />
-        <p className="nav-msg">Welcome, Avneet Caafe!</p>
+        <p className="nav-msg">Welcome, Avneet Cafe!</p>
       </div>
       <button onClick={toggleSideBar}>
         <img src="./menu.svg" alt="=" className="nav-menu" />

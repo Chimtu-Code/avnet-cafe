@@ -117,6 +117,7 @@
 
 .menu-section {
   width: 100%;
+  min-height: 100%;
   padding: 0 1rem;
 }
 
@@ -130,7 +131,7 @@
 }
 
 .loading-state img {
-  width: 100%;
+  width: 35%;
 }
 
 .items-indicator {

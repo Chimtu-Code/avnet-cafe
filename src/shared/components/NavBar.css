@@ -11,6 +11,11 @@
   cursor: pointer;
 }
 
+.nav-logo{
+  width: 40px;
+  aspect-ratio: 1/1;
+}
+
 .nav-logo-n-msg{
   display: flex;
   align-items: center;

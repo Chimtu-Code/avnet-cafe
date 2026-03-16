@@ -46,7 +46,7 @@ const Home = () => {
   if (loading) {
     return (
       <div className="loading-state">
-        <img src="/cafe-logo.svg" alt="Loading…" />
+        <img src="/cafe-logo-transparent.svg" alt="Loading…" />
       </div>
     );
   }

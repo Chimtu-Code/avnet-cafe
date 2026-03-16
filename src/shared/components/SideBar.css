@@ -1,6 +1,6 @@
 .side-bar{
   width: min(100vw, 22.5rem);
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;

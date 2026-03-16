@@ -1,29 +1,35 @@
-import React from "react";
-import Home from "./pages/Home";
-import Cart from "./pages/Cart";
-import CheckoutPage from "./orders/pages/CheckoutPage";
-import MyTokens from "./orders/pages/MyTokens";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import AdminRoutes from "./admin/AdminRoutes";
+import React, { lazy, Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { RestaurantProvider } from './shared/context/RestaurantContext';
+import Home from './features/menu/pages/Home';
+import Cart from './features/cart/pages/Cart';
+import CheckoutPage from './features/orders/pages/CheckoutPage';
+import MyTokens from './features/orders/pages/MyTokens';
 
-const App = () => {
-  return (
-    <div className="app">
-      <Router>
+const AdminRoutes = lazy(() => import('./features/admin/AdminRoutes'));
+
+const App = () => (
+  <div className="app">
+    <Router>
+      <RestaurantProvider>
         <Routes>
-          {/* User Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/check-out" element={<CheckoutPage />}></Route>
-          <Route path="/my-tokens" element={<MyTokens />}></Route>
-          {/* Admin Routes */}
-          <Route path="/admin/*" element={<AdminRoutes />} />
-          {/* 404 Not Found */}
+          <Route path="/check-out" element={<CheckoutPage />} />
+          <Route path="/my-tokens" element={<MyTokens />} />
+          <Route
+            path="/admin/*"
+            element={
+              <Suspense fallback={null}>
+                <AdminRoutes />
+              </Suspense>
+            }
+          />
           <Route path="*" element={<div>404 Not Found</div>} />
         </Routes>
-      </Router>
-    </div>
-  );
-};
+      </RestaurantProvider>
+    </Router>
+  </div>
+);
 
 export default App;

@@ -1,0 +1,19 @@
+.menu-category {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-category h2 {
+  font-family: "Poppins";
+  text-align: center;
+  background-image: linear-gradient(
+    to right,
+    white 0%,
+    #aaebff77 15%,
+    #aaebff 50%,
+    #aaebff77 85%,
+    white 100%
+  );
+  width: 100%;
+}

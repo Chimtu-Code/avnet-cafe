@@ -75,7 +75,7 @@ const Home = () => {
         className="loading-state"
         style={{ flexDirection: "column", justifyContent: "center" }}
       >
-        <img src="/cafe-logo-transparent.svg" alt="Loading…" />
+        <img src="/cafe-logo-transparent.svg" alt="Loading…" /> 
         <div className="progress-bar-container">
           <div className="progress-bar" style={{ width: `${progress}%` }} />
         </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import "./Sidebar.css";
+import "./SideBar.css";
 import { Link } from "react-router-dom";
 import { useSideBar } from "../context/SideBarContext";
 

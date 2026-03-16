@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../../shared/services/supabaseClient';
+import { isAdmin } from '../../../shared/utils/Isadmin';
 import '../styles/AdminLogin.css';
-
-// Read from env — never hardcode credentials in source
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 
 const AdminLogin = () => {
   const [email, setEmail]               = useState('');
@@ -17,7 +15,7 @@ const AdminLogin = () => {
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-      if (data?.session?.user?.email === ADMIN_EMAIL) {
+      if (isAdmin(data?.session?.user)) {
         navigate('/admin', { replace: true });
       }
     };
@@ -37,15 +35,14 @@ const AdminLogin = () => {
 
       if (authError) throw authError;
 
-      if (data?.user?.email === ADMIN_EMAIL) {
+      if (isAdmin(data?.user)) {
         navigate('/admin', { replace: true });
       } else {
-        // Signed in but not the admin account — sign out immediately
+        // Valid Supabase user but not tagged as admin
         await supabase.auth.signOut();
         setError('This account does not have admin access.');
       }
     } catch (err) {
-      // Supabase returns "Invalid login credentials" for wrong email/password
       setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);

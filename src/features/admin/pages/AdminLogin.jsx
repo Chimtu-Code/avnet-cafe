@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../../shared/services/supabaseClient";
-import { isAdmin } from "../../../shared/utils/IsAdmin.js";
+import { isAdmin } from "../../../shared/utils/isAdmin.js";
 import "../styles/AdminLogin.css";
 
 const AdminLogin = () => {

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { supabase } from "../../shared/services/supabaseClient";
-import { isAdmin } from "../../shared/utils/IsAdmin.js";
+import { isAdmin } from "../../shared/utils/isAdmin";
 import AdminLogin from "./pages/AdminLogin";
 import ManageItems from "./pages/ManageItems";
 import OrdersPending from "./pages/OrdersPending";

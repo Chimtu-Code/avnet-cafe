@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import { supabase } from '../../shared/services/supabaseClient';
-import { isAdmin } from '../../shared/utils/isAdmin';
-import AdminLogin from './pages/AdminLogin';
-import ManageItems from './pages/ManageItems';
-import OrdersPending from './pages/OrdersPending';
-import OrdersCompleted from './pages/OrdersCompleted';
-import SalesSummary from './pages/SalesSummary';
+import React, { useEffect, useRef, useState } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { supabase } from "../../shared/services/supabaseClient";
+import { isAdmin } from "../../shared/utils/IsAdmin";
+import AdminLogin from "./pages/AdminLogin";
+import ManageItems from "./pages/ManageItems";
+import OrdersPending from "./pages/OrdersPending";
+import OrdersCompleted from "./pages/OrdersCompleted";
+import SalesSummary from "./pages/SalesSummary";
 
 // ─── Auth cache ───────────────────────────────────────────────────────────────
 let _cachedAuth = null;
@@ -17,7 +17,10 @@ const ProtectedRoute = ({ children }) => {
   const verifyingRef = useRef(false);
 
   useEffect(() => {
-    if (_cachedAuth !== null) { setIsAuth(_cachedAuth); return; }
+    if (_cachedAuth !== null) {
+      setIsAuth(_cachedAuth);
+      return;
+    }
     if (verifyingRef.current) return;
     verifyingRef.current = true;
 
@@ -30,9 +33,16 @@ const ProtectedRoute = ({ children }) => {
   }, [location.pathname]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT') { _cachedAuth = null; setIsAuth(false); }
-      if (event === 'SIGNED_IN')  { _cachedAuth = null; }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        _cachedAuth = null;
+        setIsAuth(false);
+      }
+      if (event === "SIGNED_IN") {
+        _cachedAuth = null;
+      }
     });
     return () => subscription.unsubscribe();
   }, []);

@@ -1,9 +1,8 @@
 import React from "react";
-import "./Navbar.css";
+import "./NavBar.css";
 import { useSideBar } from "../context/SideBarContext";
 
 const Navbar = () => {
-
   const { toggleSideBar } = useSideBar();
 
   return (
@@ -12,9 +11,9 @@ const Navbar = () => {
         <img src="./cafe-logo.svg" alt=":)" className="nav-logo" />
         <p className="nav-msg">Welcome, Avneet Caafe!</p>
       </div>
-        <button onClick={toggleSideBar}>
-          <img src="./menu.svg" alt="=" className="nav-menu" />
-        </button>
+      <button onClick={toggleSideBar}>
+        <img src="./menu.svg" alt="=" className="nav-menu" />
+      </button>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { React, useState, useEffect } from "react";
-import "./TokenCard.css";
+import "./Tokencard.css";
 
 const TokenCard = ({ order }) => {
   const createdAt = new Date(order.created_at);

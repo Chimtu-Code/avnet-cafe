@@ -1,10 +1,17 @@
+// vite.config.js
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  server: {
-    historyApiFallback: true,
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          // Remove or replace 'some-large-lib' with a real dependency if needed
+        },
+      },
+    },
   },
 })

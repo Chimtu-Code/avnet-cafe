@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../../shared/components/NavBar";
 import SideBar from "../../../shared/components/SideBar";
@@ -14,6 +14,32 @@ const Home = () => {
   const { showSideBar } = useSideBar();
   const { categories, setCategories, items, loading, categoriesWithCounts } =
     useMenuData();
+  const [showLoading, setShowLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
+
+  // Show loading screen while loading, and for at least 2 seconds after loading completes
+  useEffect(() => {
+    let interval;
+    let hideTimeout;
+    let progressValue = 0;
+    if (loading) {
+      setShowLoading(true);
+      setProgress(0);
+      interval = setInterval(() => {
+        progressValue += 2;
+        setProgress((prev) => (prev >= 98 ? 98 : prev + 2));
+      }, 40); // progress up to 98% while loading
+    } else {
+      setProgress(100);
+      hideTimeout = setTimeout(() => {
+        setShowLoading(false);
+      }, 2000);
+    }
+    return () => {
+      clearInterval(interval);
+      clearTimeout(hideTimeout);
+    };
+  }, [loading]);
 
   const { totalItems } = useCartData();
   const [showMenu, setShowMenu] = useState(false);
@@ -43,10 +69,16 @@ const Home = () => {
       )
     : categories;
 
-  if (loading) {
+  if (showLoading) {
     return (
-      <div className="loading-state">
+      <div
+        className="loading-state"
+        style={{ flexDirection: "column", justifyContent: "center" }}
+      >
         <img src="/cafe-logo-transparent.svg" alt="Loading…" />
+        <div className="progress-bar-container">
+          <div className="progress-bar" style={{ width: `${progress}%` }} />
+        </div>
       </div>
     );
   }

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { supabase } from "../../shared/services/supabaseClient";
-import { isAdmin } from "../../shared/utils/isAdmin.js";
 import AdminLogin from "./pages/AdminLogin";
 import ManageItems from "./pages/ManageItems";
 import OrdersPending from "./pages/OrdersPending";
@@ -10,6 +9,11 @@ import SalesSummary from "./pages/SalesSummary";
 
 // ─── Auth cache ───────────────────────────────────────────────────────────────
 let _cachedAuth = null;
+
+function isAdmin(user) {
+  if (!user) return false;
+  return user?.user_metadata?.role === "admin";
+}
 
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();

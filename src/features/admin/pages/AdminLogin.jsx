@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../../shared/services/supabaseClient";
-import { isAdmin } from "../../../shared/utils/isAdmin.js";
 import "../styles/AdminLogin.css";
 
 const AdminLogin = () => {
@@ -11,6 +10,11 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  function isAdmin(user) {
+  if (!user) return false;
+  return user?.user_metadata?.role === "admin";
+}
 
   useEffect(() => {
     const checkSession = async () => {

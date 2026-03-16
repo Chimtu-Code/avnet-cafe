@@ -12,7 +12,7 @@ import { useCartData, useCartActions } from "../../cart/context/CartContext";
  */
 const Card = ({ item }) => {
   const { cartItems } = useCartData();
-  const { addToCart, inc, dec } = useCartActions();
+  const { addToCart, increment, decrement } = useCartActions();
 
   const quantity = cartItems.find((i) => i.id === item.id)?.quantity ?? 0;
 
@@ -39,14 +39,14 @@ const Card = ({ item }) => {
           <div className="card-item-quantity">
             <button
               className="cart-item-quantity-btn"
-              onClick={() => dec(item.id)}
+              onClick={() => decrement(item.id)}
             >
               <img src="/minus-icon.svg" alt="-" />
             </button>
             <p className="cart-item-quantity-value">{quantity}</p>
             <button
               className="cart-item-quantity-btn"
-              onClick={() => inc(item.id)}
+              onClick={() => increment(item.id)}
             >
               <img src="/plus-icon.svg" alt="+" />
             </button>

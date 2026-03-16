@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Menu } from 'lucide-react';
-import AdminNavbar from '../components/AdminNavbar';
-import { broadcastMenuUpdate } from '../utils/BroadCastHelper';
-import { supabase } from '../../../shared/services/supabaseClient';
-import { uploadToCloudinary } from '../../../shared/utils/uploadToCloudinary';
-import '../styles/ManageItems.css';
+import React, { useEffect, useState } from "react";
+import { Plus, Edit, Trash2, Menu } from "lucide-react";
+import AdminNavbar from "../components/AdminNavbar";
+import { broadcastMenuUpdate } from "../utils/BroadCastHelper";
+import { supabase } from "../../../shared/services/supabaseClient";
+import { uploadToCloudinary } from "../../../shared/utils/uploadToCloudinary";
+import "../styles/ManageItems.css";
 
 const ManageItems = () => {
   const [items, setItems] = useState([]);
@@ -14,23 +14,23 @@ const ManageItems = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [imageFile, setImageFile] = useState(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState('');
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    description: '',
-    category_id: '',
-    image_url: '',
+    name: "",
+    price: "",
+    description: "",
+    category_id: "",
+    image_url: "",
     available: true,
   });
 
   // ── Data fetching ─────────────────────────────────────────────────────
   const fetchCategories = async () => {
     const { data } = await supabase
-      .from('categories')
-      .select('*')
-      .order('created_at', { ascending: true });
+      .from("categories")
+      .select("*")
+      .order("created_at", { ascending: true });
     const cats = data ?? [];
     setCategories(cats);
     setSelectedCategory((prev) => prev ?? cats[0] ?? null);
@@ -38,9 +38,9 @@ const ManageItems = () => {
 
   const fetchItems = async () => {
     const { data } = await supabase
-      .from('items')
-      .select('*, categories(name)')
-      .order('created_at', { ascending: true });
+      .from("items")
+      .select("*, categories(name)")
+      .order("created_at", { ascending: true });
     setItems(data ?? []);
   };
 
@@ -54,25 +54,27 @@ const ManageItems = () => {
      * Only call fetchItems() on DELETE (need to drop the row).
      */
     const ch = supabase
-      .channel('items-rt')
+      .channel("items-rt")
       .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'items' },
-        (payload) => setItems((prev) => [...prev, payload.new])
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "items" },
+        (payload) => setItems((prev) => [...prev, payload.new]),
       )
       .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'items' },
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "items" },
         (payload) =>
           setItems((prev) =>
-            prev.map((i) => (i.id === payload.new.id ? { ...i, ...payload.new } : i))
-          )
+            prev.map((i) =>
+              i.id === payload.new.id ? { ...i, ...payload.new } : i,
+            ),
+          ),
       )
       .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'items' },
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "items" },
         (payload) =>
-          setItems((prev) => prev.filter((i) => i.id !== payload.old.id))
+          setItems((prev) => prev.filter((i) => i.id !== payload.old.id)),
       )
       .subscribe();
 
@@ -87,14 +89,18 @@ const ManageItems = () => {
   // ── Handlers ──────────────────────────────────────────────────────────
   const handleToggle = async (id, val) => {
     // Optimistic update
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, available: val } : i)));
+    setItems((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, available: val } : i)),
+    );
     const { error } = await supabase
-      .from('items')
+      .from("items")
       .update({ available: val })
-      .eq('id', id);
+      .eq("id", id);
     if (error) {
       // Roll back
-      setItems((prev) => prev.map((i) => (i.id === id ? { ...i, available: !val } : i)));
+      setItems((prev) =>
+        prev.map((i) => (i.id === id ? { ...i, available: !val } : i)),
+      );
     } else {
       await broadcastMenuUpdate();
     }
@@ -104,13 +110,14 @@ const ManageItems = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     setImageFile(file);
-    if (imagePreviewUrl.startsWith('blob:')) URL.revokeObjectURL(imagePreviewUrl);
+    if (imagePreviewUrl.startsWith("blob:"))
+      URL.revokeObjectURL(imagePreviewUrl);
     setImagePreviewUrl(URL.createObjectURL(file));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.category_id) return alert('Please select a category.');
+    if (!formData.category_id) return alert("Please select a category.");
     setUploading(true);
     try {
       let imageUrl = formData.image_url;
@@ -129,10 +136,13 @@ const ManageItems = () => {
         available: formData.available,
       };
       if (editingItem) {
-        const { error } = await supabase.from('items').update(payload).eq('id', editingItem.id);
+        const { error } = await supabase
+          .from("items")
+          .update(payload)
+          .eq("id", editingItem.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from('items').insert([payload]);
+        const { error } = await supabase.from("items").insert([payload]);
         if (error) throw error;
       }
       await broadcastMenuUpdate();
@@ -145,9 +155,9 @@ const ManageItems = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this item?')) return;
+    if (!window.confirm("Delete this item?")) return;
     setItems((prev) => prev.filter((i) => i.id !== id));
-    const { error } = await supabase.from('items').delete().eq('id', id);
+    const { error } = await supabase.from("items").delete().eq("id", id);
     if (error) {
       fetchItems(); // roll back by re-fetching
     } else {
@@ -158,23 +168,31 @@ const ManageItems = () => {
   const startEdit = (item) => {
     setEditingItem(item);
     setImageFile(null);
-    setImagePreviewUrl(item.image_url || '');
+    setImagePreviewUrl(item.image_url || "");
     setFormData({
-      name: item.name || '',
-      price: item.price ?? '',
-      description: item.description || '',
-      category_id: item.category_id || '',
-      image_url: item.image_url || '',
+      name: item.name || "",
+      price: item.price ?? "",
+      description: item.description || "",
+      category_id: item.category_id || "",
+      image_url: item.image_url || "",
       available: item.available ?? true,
     });
     setShowForm(true);
   };
 
   const resetForm = () => {
-    if (imagePreviewUrl.startsWith('blob:')) URL.revokeObjectURL(imagePreviewUrl);
-    setFormData({ name: '', price: '', description: '', category_id: '', image_url: '', available: true });
+    if (imagePreviewUrl.startsWith("blob:"))
+      URL.revokeObjectURL(imagePreviewUrl);
+    setFormData({
+      name: "",
+      price: "",
+      description: "",
+      category_id: "",
+      image_url: "",
+      available: true,
+    });
     setImageFile(null);
-    setImagePreviewUrl('');
+    setImagePreviewUrl("");
     setEditingItem(null);
     setShowForm(false);
   };
@@ -192,7 +210,10 @@ const ManageItems = () => {
             )}
             <button
               className="btn-add"
-              onClick={() => { resetForm(); setShowForm(true); }}
+              onClick={() => {
+                resetForm();
+                setShowForm(true);
+              }}
             >
               <Plus size={15} /> Add Item
             </button>
@@ -210,13 +231,17 @@ const ManageItems = () => {
               <div key={item.id} className="a-card">
                 <div className="item-card-inner">
                   <img
-                    src={item.image_url || '/food-img.svg'}
+                    src={item.image_url || "/food-img.svg"}
                     alt={item.name}
                     className="item-img"
-                    onError={(e) => { e.target.src = '/food-img.svg'; }}
+                    onError={(e) => {
+                      e.target.src = "/food-img.svg";
+                    }}
                   />
                   <div className="item-info">
-                    <p className={`item-name ${!item.available ? 'dim' : ''}`}>{item.name}</p>
+                    <p className={`item-name ${!item.available ? "dim" : ""}`}>
+                      {item.name}
+                    </p>
                     <p className="item-price">₹{item.price}</p>
                   </div>
                   <div className="item-actions">
@@ -228,10 +253,16 @@ const ManageItems = () => {
                       />
                       <span className="tog-track" />
                     </label>
-                    <button className="icon-btn" onClick={() => startEdit(item)}>
+                    <button
+                      className="icon-btn"
+                      onClick={() => startEdit(item)}
+                    >
                       <Edit size={14} />
                     </button>
-                    <button className="icon-btn del" onClick={() => handleDelete(item.id)}>
+                    <button
+                      className="icon-btn del"
+                      onClick={() => handleDelete(item.id)}
+                    >
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -254,8 +285,11 @@ const ManageItems = () => {
               {categories.map((cat) => (
                 <div
                   key={cat.id}
-                  className={`cat-item ${selectedCategory?.id === cat.id ? 'active' : ''}`}
-                  onClick={() => { setSelectedCategory(cat); setShowCategoryMenu(false); }}
+                  className={`cat-item ${selectedCategory?.id === cat.id ? "active" : ""}`}
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    setShowCategoryMenu(false);
+                  }}
                 >
                   {cat.name}
                 </div>
@@ -268,38 +302,91 @@ const ManageItems = () => {
       {showForm && (
         <div className="overlay" onClick={resetForm}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3>{editingItem ? 'Edit Item' : 'Add New Item'}</h3>
+            <h3>{editingItem ? "Edit Item" : "Add New Item"}</h3>
             <form className="item-form" onSubmit={handleSubmit}>
-              <input type="text" placeholder="Item name *" value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-              <input type="number" placeholder="Price (₹) *" value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                required step="0.01" min="0" />
-              <textarea placeholder="Description (optional)" value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
-              <select value={formData.category_id}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })} required>
+              <input
+                type="text"
+                placeholder="Item name *"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                required
+              />
+              <input
+                type="number"
+                placeholder="Price (₹) *"
+                value={formData.price}
+                onChange={(e) =>
+                  setFormData({ ...formData, price: e.target.value })
+                }
+                required
+                step="0.01"
+                min="0"
+              />
+              <textarea
+                placeholder="Description (optional)"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+              />
+              <select
+                value={formData.category_id}
+                onChange={(e) =>
+                  setFormData({ ...formData, category_id: e.target.value })
+                }
+                required
+              >
                 <option value="">Select a category *</option>
                 {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
                 ))}
               </select>
               <div>
-                <label htmlFor="img-up" className={`file-lbl ${imageFile || formData.image_url ? 'got-file' : ''}`}>
-                  {imageFile ? `📷 ${imageFile.name}` : formData.image_url ? '📷 Image saved — click to change' : '📷 Choose image (optional)'}
+                <label
+                  htmlFor="img-up"
+                  className={`file-lbl ${imageFile || formData.image_url ? "got-file" : ""}`}
+                >
+                  {imageFile
+                    ? `📷 ${imageFile.name}`
+                    : formData.image_url
+                      ? "📷 Image saved — click to change"
+                      : "📷 Choose image (optional)"}
                 </label>
-                <input id="img-up" type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
+                <input
+                  id="img-up"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  style={{ display: "none" }}
+                />
               </div>
-              {imagePreviewUrl && <img src={imagePreviewUrl} alt="Preview" className="img-prev" />}
+              {imagePreviewUrl && (
+                <img src={imagePreviewUrl} alt="Preview" className="img-prev" />
+              )}
               <label className="chk-lbl">
-                <input type="checkbox" checked={formData.available}
-                  onChange={(e) => setFormData({ ...formData, available: e.target.checked })} />
+                <input
+                  type="checkbox"
+                  checked={formData.available}
+                  onChange={(e) =>
+                    setFormData({ ...formData, available: e.target.checked })
+                  }
+                />
                 Available in stock
               </label>
               <div className="form-actions">
-                <button type="button" className="btn-c" onClick={resetForm}>Cancel</button>
+                <button type="button" className="btn-c" onClick={resetForm}>
+                  Cancel
+                </button>
                 <button type="submit" className="btn-k" disabled={uploading}>
-                  {uploading ? 'Saving…' : editingItem ? 'Update Item' : 'Add Item'}
+                  {uploading
+                    ? "Saving…"
+                    : editingItem
+                      ? "Update Item"
+                      : "Add Item"}
                 </button>
               </div>
             </form>

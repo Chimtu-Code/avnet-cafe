@@ -3,15 +3,9 @@ import './CheckoutPage.css';
 import { useCartData, useCartActions } from '../../cart/context/CartContext';
 import { supabase } from '../../../shared/services/supabaseClient';
 import { useNavigate } from 'react-router-dom';
-
-// ─── Token generation ────────────────────────────────────────────────────────
-// Math.random() over a 9000-number range gives ~3% daily collision at 500
-// orders. Instead we use a time-seeded approach: base on minute-of-day (0-1439)
-// combined with a small random suffix, then enforce uniqueness via the DB's
-// UNIQUE constraint on token_number with a retry loop.
+import { calcGST, calcTotal, GST_LABEL } from '../../../shared/utils/gst';
 
 function generateToken() {
-  // 4-digit token: 1000–9999
   return Math.floor(1000 + Math.random() * 9000);
 }
 
@@ -23,73 +17,67 @@ async function insertOrderWithUniqueToken(payload) {
     const { error } = await supabase
       .from('orders')
       .insert([{ ...payload, token_number: token }]);
-
     if (!error) return { token, error: null };
-
-    // Postgres unique violation code
-    if (error.code === '23505') continue; // collision — retry with new token
-
-    return { token: null, error }; // real error — stop
+    if (error.code === '23505') continue;
+    return { token: null, error };
   }
   return { token: null, error: new Error('Could not generate a unique token after retries') };
 }
 
-// ─── Phone validation ─────────────────────────────────────────────────────────
 const PHONE_RE = /^[0-9]{10}$/;
 
-// ─── Component ────────────────────────────────────────────────────────────────
 const CheckoutPage = () => {
   const { cartItems, totalPrice } = useCartData();
   const { clearCart } = useCartActions();
-  const [form, setForm] = useState({ name: '', phone: '' });
-  const [error, setError] = useState('');
+  const [form, setForm]           = useState({ name: '', phone: '' });
+  const [error, setError]         = useState('');
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading]     = useState(false);
+  const submittingRef = useRef(false);
   const navigate = useNavigate();
 
-  // Submission guard — useRef so toggling it never causes a re-render
-  const submittingRef = useRef(false);
-  const [loading, setLoading] = useState(false);
-
-  // Single source of truth for GST — computed once, used in UI + submit
-  const gst = useMemo(() => Math.round(totalPrice * 0.05), [totalPrice]);
-  const toPay = totalPrice + gst;
+  const gst   = useMemo(() => calcGST(totalPrice), [totalPrice]);
+  const toPay = useMemo(() => calcTotal(totalPrice), [totalPrice]);
 
   const handleChange = (e) => {
     setError('');
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = async (e) => {
+  // Step 1 — validate form, show confirmation popup
+  const handleReview = (e) => {
     e.preventDefault();
-
-    // Guard: block if already in-flight (handles double-tap on mobile)
-    if (submittingRef.current) return;
-
     if (!form.name.trim()) return setError('Please enter your name.');
     if (!PHONE_RE.test(form.phone)) return setError('Please enter a valid 10-digit phone number.');
     if (cartItems.length === 0) return setError('Your cart is empty.');
+    setError('');
+    setShowConfirm(true);
+  };
 
+  // Step 2 — user confirmed, actually place the order
+  const handleConfirm = async () => {
+    if (submittingRef.current) return;
     submittingRef.current = true;
     setLoading(true);
-    setError('');
 
-    const { token, error: dbError } = await insertOrderWithUniqueToken({
-      name: form.name.trim(),
-      phone: form.phone,
-      items: cartItems,
+    const { error: dbError } = await insertOrderWithUniqueToken({
+      name:        form.name.trim(),
+      phone:       form.phone,
+      items:       cartItems,
       total_price: toPay,
-      status: 'pending',
+      status:      'pending',
     });
 
     submittingRef.current = false;
     setLoading(false);
 
     if (dbError) {
+      setShowConfirm(false);
       setError('Something went wrong. Please try again.');
       console.error(dbError);
       return;
     }
 
-    // Persist phone so MyTokens can look up orders
     try {
       const existing = JSON.parse(localStorage.getItem('userPhones') ?? '[]');
       if (!existing.includes(form.phone)) {
@@ -110,45 +98,91 @@ const CheckoutPage = () => {
         <p>Enter Your Details</p>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={handleReview} noValidate>
         <label htmlFor="name">Your Name</label>
         <input
-          id="name"
-          type="text"
-          name="name"
-          placeholder="Name"
-          value={form.name}
-          onChange={handleChange}
-          autoComplete="name"
-          required
+          id="name" type="text" name="name"
+          placeholder="Name" value={form.name}
+          onChange={handleChange} autoComplete="name" required
         />
 
         <label htmlFor="phone">Phone Number</label>
         <input
-          id="phone"
-          type="tel"
-          name="phone"
-          placeholder="10-digit phone number"
-          value={form.phone}
-          onChange={handleChange}
-          autoComplete="tel-national"
-          maxLength={10}
-          required
+          id="phone" type="tel" name="phone"
+          placeholder="10-digit phone number" value={form.phone}
+          onChange={handleChange} autoComplete="tel-national"
+          maxLength={10} required
         />
 
         {error && <p className="checkout-error">{error}</p>}
 
-        <div className="checkout-price-summary">
-          <span>Item total</span><span>₹{totalPrice}</span>
-          <span>GST (5%)</span><span>₹{gst}</span>
-          <span className="checkout-total">Total</span>
-          <span className="checkout-total">₹{toPay}</span>
-        </div>
-
-        <button type="submit" disabled={loading}>
-          {loading ? 'Placing Order…' : `Continue & Pay ₹${toPay}`}
+        <button type="submit">
+          Continue & Pay ₹{toPay}
         </button>
       </form>
+
+      {/* ── Confirmation popup ─────────────────────────────────────── */}
+      {showConfirm && (
+        <div className="confirm-overlay" onClick={() => !loading && setShowConfirm(false)}>
+          <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+
+            <p className="confirm-title">Confirm Your Order</p>
+
+            {/* Order summary */}
+            <div className="confirm-items">
+              {cartItems.map((item) => (
+                <div key={item.id} className="confirm-item-row">
+                  <span className="confirm-item-name">{item.name}</span>
+                  <span className="confirm-item-meta">
+                    x{item.quantity} &nbsp;·&nbsp; ₹{item.price * item.quantity}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Bill breakdown */}
+            <div className="confirm-bill">
+              <div className="confirm-bill-row">
+                <span>Item total</span>
+                <span>₹{totalPrice}</span>
+              </div>
+              <div className="confirm-bill-row">
+                <span>GST ({GST_LABEL})</span>
+                <span>₹{gst}</span>
+              </div>
+              <div className="confirm-bill-row confirm-bill-total">
+                <span>Total</span>
+                <span>₹{toPay}</span>
+              </div>
+            </div>
+
+            {/* Customer details */}
+            <div className="confirm-details">
+              <span>👤 {form.name}</span>
+              <span>📞 {form.phone}</span>
+            </div>
+
+            {/* Actions */}
+            <div className="confirm-actions">
+              <button
+                className="confirm-btn-cancel"
+                onClick={() => setShowConfirm(false)}
+                disabled={loading}
+              >
+                Edit
+              </button>
+              <button
+                className="confirm-btn-pay"
+                onClick={handleConfirm}
+                disabled={loading}
+              >
+                {loading ? 'Placing…' : `Pay ₹${toPay}`}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };

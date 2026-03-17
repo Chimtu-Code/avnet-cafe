@@ -32,7 +32,10 @@ const TokenCard = ({ order }) => {
             gap: "0.5rem",
           }}
         >
-          <span>🎉 Your order is ready for pickup!</span>
+          <span style={{
+            fontSize:"12px",
+            fontFamily:"Poppins"
+          }}> Your order is ready for pickup!</span>
           <button
             onClick={() => setShowPopup(false)}
             style={{

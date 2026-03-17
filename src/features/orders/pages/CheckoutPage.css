@@ -1,110 +1,256 @@
+/* ── Page layout — fills screen, no void below ───────────────────────────── */
 .check-out {
   width: 100%;
-  min-height: 100vh;
+  height: 100dvh; /* dynamic viewport height — accounts for mobile browser chrome */
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding: 0.7rem;
-}
-
-.check-out form {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-}
-
-.check-out input {
-  width: 100%;
-  display: flex;
-  padding: 1rem;
-  align-items: center;
-  gap: 0.625rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--Background-Grey2, #ccc);
+  justify-content: center; /* vertically centre the form in the screen */
+  padding: 2rem 1.5rem;
   background: #fff;
-  align-self: stretch;
-  font-family: Poppins;
-  font-size: 1rem;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 1.375rem; /* 137.5% */
-  letter-spacing: -0.0255rem;
+  font-family: 'Poppins', sans-serif;
+  box-sizing: border-box;
 }
 
-.check-out input:focus {
-  outline: none;
-  border: 1px solid var(--Primary, #000);
-}
-
-.check-out input::placeholder {
-  color: var(--Background-Grey2, #ccc);
-  font-family: Poppins;
-  font-size: 1rem;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 1.375rem; /* 137.5% */
-  letter-spacing: -0.0255rem;
-}
-
-.check-out input {
-  margin-bottom: 1rem;
-}
-
-.check-out label {
-  color: var(--Text-Default, #282828);
-  font-family: Poppins;
-  font-size: 0.8rem;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 158%;
-  width: 98%;
-}
-
-.check-out button {
-  width: 100%;
-  margin-top: 1rem;
-  height: 2.8rem;
-  background: #000;
-  color: #fff;
-  color: #fff;
-  font-family: Roboto;
-  font-size: 1rem;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
-  outline: none;
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.25);
-  transition: all 0.3s ease-in-out;
-}
-
+/* ── Logo + title ────────────────────────────────────────────────────────── */
 .welcome-to-signin {
-  width: 100%;
-  height: 100%;
   display: flex;
-  justify-content: center;
-  align-items: center;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1rem;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 2rem;
 }
 
 .welcome-to-signin img {
-  height: 13rem;
-  width: 13rem;
-  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
 }
 
 .welcome-to-signin p {
-  color: #707070;
-  text-align: center;
-  font-family: Poppins;
-  font-size: 0.875rem;
-  font-style: normal;
-  font-weight: 400;
-  line-height: 158%;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111;
 }
+
+/* ── Form — full width on mobile, capped on wider screens ───────────────── */
+form {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #333;
+  margin-top: 0.25rem;
+}
+
+input {
+  padding: 0.85rem 1rem;
+  border: 1.5px solid #e5e5e5;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: #f8f9fa;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  width: 100%;
+}
+
+input:focus {
+  border-color: #000;
+  background: #fff;
+}
+
+.checkout-error {
+  font-size: 0.8rem;
+  color: #dc2626;
+  padding: 0.5rem 0.75rem;
+  background: #fef2f2;
+  border-radius: 8px;
+}
+
+form button[type="submit"] {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+  width: 100%;
+}
+
+form button[type="submit"]:hover   { background: #222; }
+form button[type="submit"]:disabled { background: #999; cursor: not-allowed; }
+
+/* ── Confirmation overlay — covers full screen, anchors modal to bottom ─── */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-end; /* modal sticks to bottom */
+  justify-content: center;
+  z-index: 1000;
+  animation: overlayIn 0.2s ease;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Modal — bottom sheet style ─────────────────────────────────────────── */
+.confirm-modal {
+  background: #fff;
+  width: 100%;
+  max-width: 480px;
+  /* Rounded only at the top — flat bottom flush with screen edge */
+  border-radius: 24px 24px 0 0;
+  padding: 1.25rem 1.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  /* Cap height so it never overflows even with many items */
+  max-height: 92dvh;
+  overflow-y: auto;
+  animation: sheetUp 0.28s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* Drag handle pill at top of sheet */
+.confirm-modal::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  margin: 0 auto 0.25rem;
+  flex-shrink: 0;
+}
+
+.confirm-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111;
+  text-align: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* ── Item list ── */
+.confirm-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.confirm-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+  background: #f8f8f8;
+  border-radius: 8px;
+}
+
+.confirm-item-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111;
+  flex: 1;
+}
+
+.confirm-item-meta {
+  font-size: 0.85rem;
+  color: #555;
+  white-space: nowrap;
+  margin-left: 0.5rem;
+}
+
+/* ── Bill breakdown ── */
+.confirm-bill {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem;
+  background: #f8f8f8;
+  border-radius: 12px;
+}
+
+.confirm-bill-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: #555;
+}
+
+.confirm-bill-row span:last-child {
+  font-weight: 600;
+  color: #333;
+}
+
+.confirm-bill-total {
+  border-top: 1px dashed #ddd;
+  padding-top: 0.45rem;
+  margin-top: 0.15rem;
+}
+
+.confirm-bill-total span {
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  color: #000 !important;
+}
+
+/* ── Customer details pill ── */
+.confirm-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #444;
+  padding: 0.6rem 0.75rem;
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+
+/* ── Action buttons ── */
+.confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.1rem;
+}
+
+.confirm-btn-cancel,
+.confirm-btn-pay {
+  flex: 1;
+  padding: 0.95rem;
+  border: none;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.confirm-btn-cancel            { background: #f0f0f0; color: #333; }
+.confirm-btn-cancel:hover      { background: #e0e0e0; }
+.confirm-btn-pay               { background: #000; color: #fff; }
+.confirm-btn-pay:hover:not(:disabled) { background: #222; }
+
+.confirm-btn-pay:disabled,
+.confirm-btn-cancel:disabled   { opacity: 0.6; cursor: not-allowed; }

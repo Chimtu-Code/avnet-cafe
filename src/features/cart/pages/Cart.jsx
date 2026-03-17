@@ -4,6 +4,7 @@ import CartList from '../components/CartList';
 import { useCartData, useCartActions } from '../context/CartContext';
 import { supabase } from '../../../shared/services/supabaseClient';
 import { useState, useEffect } from 'react';
+import { calcGST, calcTotal, GST_LABEL } from '../../../shared/utils/gst';
 import './Cart.css';
 
 // ─── Suggestions Strip ────────────────────────────────────────────────────────
@@ -86,8 +87,8 @@ const Cart = () => {
   const { totalItems, totalPrice, cartItems } = useCartData();
   const { addToCart } = useCartActions();
 
-  const gst      = Math.round(totalPrice * 0.05);
-  const totalToPay = totalPrice + gst;
+  const gst        = calcGST(totalPrice);
+  const totalToPay = calcTotal(totalPrice);
 
   return (
     <div className="cart-sec">
@@ -116,7 +117,7 @@ const Cart = () => {
           <p>₹{totalPrice}</p>
         </div>
         <div className="items-gst">
-          <p>GST & Other Charges (5%)</p>
+          <p>GST & Other Charges ({GST_LABEL})</p>
           <p>₹{gst}</p>
         </div>
         <hr />

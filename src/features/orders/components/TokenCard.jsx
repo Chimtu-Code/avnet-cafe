@@ -3,7 +3,7 @@ import "./Tokencard.css";
 
 const TokenCard = ({ order }) => {
   const createdAt = new Date(order.created_at);
-  const gst = Math.round(order.total_price * 0.05);
+  const gst = Math.round(order.total_price * 0.025);
   const basePrice = order.total_price - gst;
   const [showDetails, setShowDetails] = useState(false);
   const [showPopup, setShowPopup] = useState(order.status === "completed");
@@ -102,10 +102,10 @@ const TokenCard = ({ order }) => {
         )}
         <div className="user-bill-total">
           <p>Item Total</p>
-          <p>{basePrice}</p>
+          <p>₹{basePrice}</p>
         </div>
         <div className="user-bill-gst">
-          <p>GST & Other Charges (5%)</p>
+          <p>GST & Other Charges (2.5%)</p>
           <p>₹{gst}</p>
         </div>
         <hr />

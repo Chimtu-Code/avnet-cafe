@@ -54,7 +54,7 @@ const SideBar = () => {
       ))}
       <div className="side-bar-footer">
         <p>from</p>
-        <img src="./company-logo.svg" alt="" />
+        <img src="./company-logo.png" alt="" />
       </div>
     </div>
   );

@@ -59,7 +59,7 @@ const OrdersPending = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [expanded, setExpanded] = useState({});
-  const [activeMeal, setActiveMeal] = useState('dinner');
+  const [activeMeal, setActiveMeal] = useState("dinner");
 
   useEffect(() => {
     fetchOrders();
@@ -116,14 +116,14 @@ const OrdersPending = () => {
           {/* Meal tabs */}
           <div className="meal-tabs">
             {[
-              { key: 'breakfast', label: 'BREAKFAST' },
-              { key: 'lunch', label: 'LUNCH' },
-              { key: 'snacks', label: 'SNACKS' },
-              { key: 'dinner', label: 'DINNER' },
+              { key: "breakfast", label: "BREAKFAST" },
+              { key: "lunch", label: "LUNCH" },
+              { key: "snacks", label: "SNACKS" },
+              { key: "dinner", label: "DINNER" },
             ].map((m) => (
               <button
                 key={m.key}
-                className={`meal-tab ${activeMeal === m.key ? 'active' : ''}`}
+                className={`meal-tab ${activeMeal === m.key ? "active" : ""}`}
                 onClick={() => setActiveMeal(m.key)}
               >
                 {m.label}
@@ -132,10 +132,10 @@ const OrdersPending = () => {
           </div>
           <div className="meals-grid">
             {[
-              { key: 'breakfast', label: 'BREAKFAST' },
-              { key: 'lunch', label: 'LUNCH' },
-              { key: 'snacks', label: 'SNACKS' },
-              { key: 'dinner', label: 'DINNER' },
+              { key: "breakfast", label: "BREAKFAST" },
+              { key: "lunch", label: "LUNCH" },
+              { key: "snacks", label: "SNACKS" },
+              { key: "dinner", label: "DINNER" },
             ]
               .filter((meal) => meal.key === activeMeal)
               .map((meal) => (
@@ -143,7 +143,7 @@ const OrdersPending = () => {
                   <h3 className="meal-title">{meal.label}</h3>
                   <div className="cards-grid">
                     {/* For now all orders go under Dinner */}
-                    {meal.key !== 'dinner' ? (
+                    {meal.key !== "dinner" ? (
                       <div className="empty-state">
                         <ShoppingBag size={48} />
                         <p>No pending orders for {meal.label.toLowerCase()}</p>
@@ -156,13 +156,15 @@ const OrdersPending = () => {
                     ) : (
                       orders.map((order) => {
                         const t = new Date(order.created_at);
-                        const base = order.total_price - calcGST(order.total_price);
+                        const base =
+                          order.total_price - calcGST(order.total_price);
                         const gst = calcGST(order.total_price);
                         return (
                           <div key={order.id} className="a-card">
                             <div className="card-top">
                               <span>
-                                {(order.name || "USER").toUpperCase()} ORDER CONFIRMED
+                                {(order.name || "USER").toUpperCase()} ORDER
+                                CONFIRMED
                               </span>
                               <label className="chk-wrap">
                                 <input
@@ -178,7 +180,9 @@ const OrdersPending = () => {
                             <div className="token-block">
                               <p className="token-label">Order Number</p>
                               <div className="token-row">
-                                <p className="token-num">#{order.token_number}</p>
+                                <p className="token-num">
+                                  #{order.token_number}
+                                </p>
                                 <div className="token-meta">
                                   <p>{t.toLocaleDateString()}</p>
                                   <p>

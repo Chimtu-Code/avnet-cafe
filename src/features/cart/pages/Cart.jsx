@@ -120,26 +120,56 @@ const PreorderNote = () => {
     return d;
   };
 
-  const lunchStart = makeTime(12);
-  const lunchCutoff = makeTime(10);
-  const dinnerStart = makeTime(20);
-  const dinnerCutoff = makeTime(18);
+  // Define meals and their start hours (24h)
+  const meals = [
+    { key: "breakfast", label: "Breakfast", startHour: 8 },
+    { key: "lunch", label: "Lunch", startHour: 12 },
+    { key: "snacks", label: "Snacks", startHour: 17 },
+    { key: "dinner", label: "Dinner", startHour: 20 },
+  ];
+
+  // compute start and cutoff Date objects for today
+  const schedule = meals.map((m) => {
+    const start = makeTime(m.startHour);
+    const cutoffHour = (m.startHour - 2 + 24) % 24;
+    // If cutoffHour > startHour, it means cutoff is previous day (not expected here but safe)
+    const cutoff = makeTime(cutoffHour, 0, cutoffHour > m.startHour ? -1 : 0);
+    return { ...m, start, cutoff };
+  });
 
   let message =
-    "Pre-orders accepted for Lunch (12:00) and Dinner (8:00 PM) only. Pre-order cutoff is 2 hours before the meal.";
+    "Pre-orders accepted for Breakfast (8:00 AM), Lunch (12:00 PM), Snacks (5:00 PM) and Dinner (8:00 PM). Cutoff is 2 hours before each meal.";
 
-  if (now < lunchCutoff) {
-    message = `Pre-orders OPEN for Lunch. Cutoff at ${formatTime(lunchCutoff)}.`;
-  } else if (now >= lunchCutoff && now < lunchStart) {
-    message = `Pre-orders for Lunch are CLOSED. Lunch starts at ${formatTime(lunchStart)}.`;
-  } else if (now >= lunchStart && now < dinnerCutoff) {
-    message = `Pre-orders OPEN for Dinner. Cutoff at ${formatTime(dinnerCutoff)}.`;
-  } else if (now >= dinnerCutoff && now < dinnerStart) {
-    message = `Pre-orders for Dinner are CLOSED. Dinner starts at ${formatTime(dinnerStart)}.`;
-  } else if (now >= dinnerStart) {
-    const nextLunchStart = makeTime(12, 0, 1);
-    const nextLunchCutoff = makeTime(10, 0, 1);
-    message = `After dinner. Next Lunch pre-order cutoff: ${formatTime(nextLunchCutoff)} (tomorrow).`;
+  // Follow the same open/closed logic in order
+  const b = schedule[0];
+  const l = schedule[1];
+  const s = schedule[2];
+  const d = schedule[3];
+
+  if (now < b.cutoff) {
+    message = `Pre-orders OPEN for ${b.label}. Cutoff at ${formatTime(b.cutoff)}.`;
+  } else if (now >= b.cutoff && now < b.start) {
+    message = `Pre-orders for ${b.label} are CLOSED. ${b.label} starts at ${formatTime(b.start)}.`;
+  } else if (now >= b.start && now < l.cutoff) {
+    message = `Pre-orders OPEN for ${l.label}. Cutoff at ${formatTime(l.cutoff)}.`;
+  } else if (now >= l.cutoff && now < l.start) {
+    message = `Pre-orders for ${l.label} are CLOSED. ${l.label} starts at ${formatTime(l.start)}.`;
+  } else if (now >= l.start && now < s.cutoff) {
+    message = `Pre-orders OPEN for ${s.label}. Cutoff at ${formatTime(s.cutoff)}.`;
+  } else if (now >= s.cutoff && now < s.start) {
+    message = `Pre-orders for ${s.label} are CLOSED. ${s.label} starts at ${formatTime(s.start)}.`;
+  } else if (now >= s.start && now < d.cutoff) {
+    message = `Pre-orders OPEN for ${d.label}. Cutoff at ${formatTime(d.cutoff)}.`;
+  } else if (now >= d.cutoff && now < d.start) {
+    message = `Pre-orders for ${d.label} are CLOSED. ${d.label} starts at ${formatTime(d.start)}.`;
+  } else if (now >= d.start) {
+    // after dinner: show next day's breakfast cutoff
+    const nextBreakfastCutoff = makeTime(
+      b.startHour - 2 < 0 ? b.startHour - 2 + 24 : b.startHour - 2,
+      0,
+      1,
+    );
+    message = `After dinner. Next ${b.label} pre-order cutoff: ${formatTime(nextBreakfastCutoff)} (tomorrow).`;
   }
 
   return (
@@ -148,8 +178,8 @@ const PreorderNote = () => {
       <p className="preorder-time">Current time: {formatTime(now)}</p>
     </div>
   );
-};
-// ─── Cart Page ────────────────────────────────────────────────────────────────
+}; 
+
 const Cart = () => {
   const { totalItems, totalPrice, cartItems } = useCartData();
   const { addToCart } = useCartActions();

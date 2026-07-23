@@ -52,10 +52,10 @@ const SideBar = () => {
           link={option.link}
         />
       ))}
-      <div className="side-bar-footer">
+      {/* <div className="side-bar-footer">
         <p>from</p>
         <img src="./company-logo.png" alt="" />
-      </div>
+      </div> */}
     </div>
   );
 };

@@ -94,7 +94,7 @@ const CheckoutPage = () => {
   return (
     <div className="check-out">
       <div className="welcome-to-signin">
-        <img src="/cafe-logo.svg" alt="Avnet Cafe" />
+        <img src="/pauls-logo.png" alt="Avnet Cafe" />
         <p>Enter Your Details</p>
       </div>
 

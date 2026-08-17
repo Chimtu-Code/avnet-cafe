@@ -432,7 +432,7 @@ const AdminNavbar = ({ currentPage }) => {
         {/* ── Top row ── */}
         <div className="navbar-top">
           <div className="navbar-brand">
-            Avneet Caafe <span>Admin</span>
+            Paul's Kitchen <span>Admin</span>
           </div>
 
           {/* Open/Closed toggle + Message button */}

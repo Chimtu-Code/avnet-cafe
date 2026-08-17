@@ -4,6 +4,10 @@
   flex-direction: column;
 }
 
+.menu-category:last-child{
+  padding-bottom: 50px;
+}
+
 .menu-category h2 {
   font-family: "Poppins";
   text-align: center;

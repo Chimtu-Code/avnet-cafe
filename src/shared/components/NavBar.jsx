@@ -8,8 +8,8 @@ const Navbar = () => {
   return (
     <div className="nav-bar">
       <div className="nav-logo-n-msg">
-        <img src="./chef-logo-2.png" alt=":)" className="nav-logo" />
-        <p className="nav-msg">Welcome to Chef Hospitality!</p>
+        <img src="./pauls-logo.png" alt=":)" className="nav-logo" />
+        <p className="nav-msg">Welcome to Pauls Kitchen!</p>
       </div>
       <button onClick={toggleSideBar}>
         <img src="./menu.svg" alt="=" className="nav-menu" />

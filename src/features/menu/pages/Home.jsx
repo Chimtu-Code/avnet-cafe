@@ -17,7 +17,6 @@ const Home = () => {
   const [showLoading, setShowLoading] = useState(true);
   const [progress, setProgress] = useState(0);
 
-  // Show loading screen while loading, and for at least 2 seconds after loading completes
   useEffect(() => {
     let interval;
     let hideTimeout;
@@ -75,7 +74,7 @@ const Home = () => {
         className="loading-state"
         style={{ flexDirection: "column", justifyContent: "center" }}
       >
-        <img src="/chef-logo.png" alt="Loading…" /> 
+        <img src="/pauls-logo.png" alt="Loading…" /> 
         <div className="progress-bar-container">
           <div className="progress-bar" style={{ width: `${progress}%` }} />
         </div>

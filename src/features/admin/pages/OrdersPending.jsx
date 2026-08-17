@@ -114,28 +114,13 @@ const OrdersPending = () => {
         <AdminNavbar currentPage="orders" />
         <div className="page-body">
           {/* Meal tabs */}
-          <div className="meal-tabs">
-            {[
-              { key: "breakfast", label: "BREAKFAST" },
-              { key: "lunch", label: "LUNCH" },
-              { key: "snacks", label: "SNACKS" },
-              { key: "dinner", label: "DINNER" },
-            ].map((m) => (
-              <button
-                key={m.key}
-                className={`meal-tab ${activeMeal === m.key ? "active" : ""}`}
-                onClick={() => setActiveMeal(m.key)}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
+          
           <div className="meals-grid">
             {[
-              { key: "breakfast", label: "BREAKFAST" },
-              { key: "lunch", label: "LUNCH" },
-              { key: "snacks", label: "SNACKS" },
-              { key: "dinner", label: "DINNER" },
+              { key: "breakfast", label: "PENDING" },
+              { key: "lunch", label: "PENDING" },
+              { key: "snacks", label: "PENDING" },
+              { key: "dinner", label: "PENDING" },
             ]
               .filter((meal) => meal.key === activeMeal)
               .map((meal) => (
